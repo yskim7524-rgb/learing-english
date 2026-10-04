@@ -142,7 +142,7 @@
                 <div>
                     <div class="flex items-center space-x-2 mb-1">
                         <span id="scriptBadgeLevel" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Intermediate</span>
-                        <span id="scriptDate" class="text-xs text-slate-400">2026. 10. 4.</span>
+                        <span id="scriptDate" class="text-xs text-slate-400">2026. 10. 5.</span>
                     </div>
                     <h2 id="scriptTitle" class="text-2xl font-bold text-white mb-1">카페 주문하기</h2>
                     <p id="scriptSummary" class="text-xs text-slate-400">상황: 미국 현지 매장에서 얼음 적게 넣고 시럽 반으로 줄여 주문하기</p>
@@ -250,7 +250,7 @@
     <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center hidden">
         <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p class="text-white font-bold text-lg mb-1">Gemini가 대화를 작성 중입니다...</p>
-        <p class="text-slate-400 text-xs">사용 가능한 제미나이 모델을 감지하고 스크립트를 생성합니다.</p>
+        <p class="text-slate-400 text-xs">최신 제미나이 모델을 자동으로 연결하여 생성합니다.</p>
     </div>
 
     <script>
@@ -318,32 +318,7 @@
             document.getElementById('situationInput').value = text;
         }
 
-        // Dynamically Discovery Active Gemini Model (Solves 404 Model Not Found Error)
-        async function fetchActiveModel(key) {
-            const versions = ['v1beta', 'v1'];
-            for (const ver of versions) {
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${key}`);
-                    const data = await res.json();
-                    
-                    if (res.ok && data.models && data.models.length > 0) {
-                        const validModels = data.models.filter(m => 
-                            m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent')
-                        );
-                        if (validModels.length > 0) {
-                            // Find best model: prioritize flash/pro models
-                            const chosen = validModels.find(m => m.name.includes('flash') || m.name.includes('pro')) || validModels[0];
-                            return { ver: ver, fullModelName: chosen.name }; // returns e.g. "models/gemini-2.0-flash"
-                        }
-                    }
-                } catch (e) {
-                    console.error("Model fetch failed for version " + ver, e);
-                }
-            }
-            return null;
-        }
-
-        // Gemini Generation Handler
+        // Robust Generation Handler with Multi-Model Fallback Trial
         async function handleGenerate(e) {
             e.preventDefault();
             if (!apiKey) {
@@ -359,22 +334,14 @@
 
             document.getElementById('loadingOverlay').classList.remove('hidden');
 
-            try {
-                // 1. Dynamic Model Discovery
-                const activeModel = await fetchActiveModel(apiKey);
-                if (!activeModel) {
-                    throw new Error('API 키가 올바르지 않거나 사용 가능한 Gemini 모델을 찾을 수 없습니다. Google AI Studio에서 API 키를 다시 발급받아 주세요.');
-                }
-
-                // 2. Prepare Prompt
-                const promptText = `You are an expert native American English teacher.
+            const promptText = `You are an expert native American English teacher. 
 Create a natural daily dialogue script based on the situation provided by the user.
 
 Rules:
 1. Use natural, daily-life American English expressions.
 2. Provide a full dialogue script with Korean translations.
 3. Extract 3-5 mandatory key expressions/idioms with explanations.
-4. Output MUST strictly be in valid JSON format matching the schema below.
+4. Output MUST strictly be in valid JSON format matching the schema below without any markdown backticks.
 
 User Situation: "${situation}"
 Difficulty Level: ${level}
@@ -400,28 +367,87 @@ JSON Output Format:
   ]
 }`;
 
-                const endpointUrl = `https://generativelanguage.googleapis.com/${activeModel.ver}/${activeModel.fullModelName}:generateContent?key=${apiKey}`;
+            // Priority model list to try sequentially
+            let candidateList = [
+                { ver: 'v1beta', name: 'gemini-3.8-flash' },
+                { ver: 'v1beta', name: 'gemini-2.0-flash' },
+                { ver: 'v1beta', name: 'gemini-1.5-flash' },
+                { ver: 'v1beta', name: 'gemini-1.5-pro' },
+                { ver: 'v1', name: 'gemini-1.5-flash' },
+                { ver: 'v1', name: 'gemini-1.5-pro' }
+            ];
 
-                // 3. Request Generation
-                const response = await fetch(endpointUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+            // Append any dynamically discovered models
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.models && data.models.length > 0) {
+                        const fetched = data.models
+                            .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+                            .map(m => ({ ver: 'v1beta', name: m.name.replace(/^models\//, '') }));
+                        
+                        const combined = [...candidateList, ...fetched];
+                        const uniqueMap = new Map();
+                        combined.forEach(item => uniqueMap.set(`${item.ver}:${item.name}`, item));
+                        candidateList = Array.from(uniqueMap.values());
+                    }
+                }
+            } catch(e) {
+                console.log("Model discovery fetch failed, using default candidate list", e);
+            }
+
+            let successData = null;
+            let lastErrorMessage = "";
+
+            // Try candidate models one by one until generateContent returns 200 OK
+            for (const target of candidateList) {
+                const url = `https://generativelanguage.googleapis.com/${target.ver}/models/${target.name}:generateContent?key=${apiKey}`;
+
+                const payloads = [
+                    {
                         contents: [{ parts: [{ text: promptText }] }],
                         generationConfig: { responseMimeType: "application/json" }
-                    })
-                });
+                    },
+                    {
+                        contents: [{ parts: [{ text: promptText }] }]
+                    }
+                ];
 
-                const data = await response.json();
-                document.getElementById('loadingOverlay').classList.add('hidden');
+                let reqSuccess = false;
 
-                if (!response.ok || data.error) {
-                    const errMsg = data.error ? data.error.message : 'HTTP 오류가 발생했습니다.';
-                    throw new Error(errMsg);
+                for (const payload of payloads) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                            successData = data;
+                            reqSuccess = true;
+                            break;
+                        } else if (data.error) {
+                            lastErrorMessage = data.error.message || JSON.stringify(data.error);
+                        }
+                    } catch (err) {
+                        lastErrorMessage = err.message;
+                    }
                 }
 
-                if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-                    let rawText = data.candidates[0].content.parts[0].text.trim();
+                if (reqSuccess) {
+                    break; // Successfully generated!
+                }
+            }
+
+            document.getElementById('loadingOverlay').classList.add('hidden');
+
+            if (successData) {
+                try {
+                    let rawText = successData.candidates[0].content.parts[0].text.trim();
                     rawText = rawText.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
                     
                     const parsedData = JSON.parse(rawText);
@@ -434,13 +460,11 @@ JSON Output Format:
 
                     renderChapterUI();
                     switchTab('tab-script');
-                } else {
-                    throw new Error('Gemini 응답 내용이 비어있습니다.');
+                } catch (parseErr) {
+                    alert('AI 대화 생성 결과 파싱 중 오류가 발생했습니다. 다시 시도해 주세요.');
                 }
-
-            } catch (err) {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                alert('대화 생성 중 오류가 발생했습니다:\n\n' + err.message);
+            } else {
+                alert('대화 생성 중 오류가 발생했습니다:\n\n' + (lastErrorMessage || 'API 키를 확인하시거나 잠시 후 다시 시도해 주세요.'));
             }
         }
 
@@ -725,7 +749,7 @@ JSON Output Format:
         function loadDefaultSampleChapter() {
             currentChapter = {
                 id: 1001,
-                date: "2026. 10. 4.",
+                date: "2026. 10. 5.",
                 chapter_title: "카페 주문하기",
                 situation_summary: "미국 현지 매장에서 얼음 적게 넣고 시럽 반으로 줄여 주문하기",
                 level: "Intermediate",
