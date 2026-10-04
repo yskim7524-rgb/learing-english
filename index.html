@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미국 실생활 영어 학습 - Gemini AI</title>
+    <title>미국 실생활 영어 학습 - Gemini AI Pro</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -42,7 +42,7 @@
                 <div class="bg-blue-600 text-white p-2 rounded-lg font-bold text-lg">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </div>
-                <h1 class="font-bold text-lg sm:text-xl text-white tracking-wide">Daily English AI</h1>
+                <h1 class="font-bold text-lg sm:text-xl text-white tracking-wide">Daily English AI Pro</h1>
             </div>
             
             <button id="openApiModalBtn" onclick="toggleModal('apiModal', true)" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-sm transition">
@@ -82,7 +82,7 @@
                     <i class="fa-solid fa-wand-magic-sparkles text-blue-400 mr-2"></i> 대화 상황 입력하기
                 </h2>
                 <p class="text-slate-400 text-sm mb-6">
-                    원하는 실생활 상황을 한국어나 영어로 자유롭게 적어주세요. Gemini가 원어민 표현으로 대화를 생성해 드립니다.
+                    원하는 실생활 상황을 한국어나 영어로 자유롭게 적어주세요. Gemini Pro가 원어민 표현으로 대화를 생성해 드립니다.
                 </p>
 
                 <form onsubmit="handleGenerate(event)" class="space-y-4">
@@ -130,7 +130,7 @@
 
                     <button type="submit" id="generateBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 flex justify-center items-center space-x-2 transition">
                         <i class="fa-solid fa-sparkles"></i>
-                        <span>AI 대화 스크립트 생성하기</span>
+                        <span>AI 대화 스크립트 생성하기 (Gemini Pro)</span>
                     </button>
                 </form>
             </div>
@@ -249,7 +249,7 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center hidden">
         <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-white font-bold text-lg mb-1">Gemini가 대화를 작성 중입니다...</p>
+        <p class="text-white font-bold text-lg mb-1">Gemini Pro가 대화를 작성 중입니다...</p>
         <p class="text-slate-400 text-xs">미국 현지 실생활 원어민 표현을 추출하는 중입니다.</p>
     </div>
 
@@ -318,7 +318,7 @@
             document.getElementById('situationInput').value = text;
         }
 
-        // Gemini API Generation Call (Fixed JSON Schema & Detail Error Catching)
+        // Gemini Pro Model Multi-Endpoint Fallback Handling
         async function handleGenerate(e) {
             e.preventDefault();
             if (!apiKey) {
@@ -335,7 +335,7 @@
             document.getElementById('loadingOverlay').classList.remove('hidden');
 
             const systemPrompt = `You are an expert native American English teacher. 
-Create a natural daily dialogue script based on the situation provided.
+Create a highly natural and practical daily dialogue script based on the situation provided. Use authentic American expressions.
 User Situation: "${situation}"
 Difficulty Level: ${level}`;
 
@@ -379,39 +379,54 @@ Difficulty Level: ${level}`;
                 }
             };
 
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
-                });
+            // Priority: Gemini Pro models first, fallback to Flash models if needed
+            const endpoints = [
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+            ];
 
-                const data = await response.json();
-                document.getElementById('loadingOverlay').classList.add('hidden');
+            let lastError = null;
+            let successData = null;
 
-                if (!response.ok || data.error) {
-                    const errMsg = data.error ? data.error.message : 'HTTP 오류가 발생했습니다.';
-                    throw new Error(`[API 오류] ${errMsg}`);
+            for (const url of endpoints) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                        successData = data;
+                        break;
+                    } else if (data.error) {
+                        lastError = data.error.message;
+                    }
+                } catch (err) {
+                    lastError = err.message;
                 }
+            }
 
-                if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-                    const rawText = data.candidates[0].content.parts[0].text.trim();
-                    const parsedData = JSON.parse(rawText);
-                    currentChapter = {
-                        id: Date.now(),
-                        date: new Date().toLocaleDateString('ko-KR'),
-                        situationInput: situation,
-                        ...parsedData
-                    };
+            document.getElementById('loadingOverlay').classList.add('hidden');
 
-                    renderChapterUI();
-                    switchTab('tab-script');
-                } else {
-                    throw new Error('Gemini 응답 내용이 비어있습니다.');
-                }
-            } catch (err) {
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                alert('대화 생성 중 오류가 발생했습니다:\n\n' + err.message);
+            if (successData) {
+                const rawText = successData.candidates[0].content.parts[0].text.trim();
+                const parsedData = JSON.parse(rawText);
+                currentChapter = {
+                    id: Date.now(),
+                    date: new Date().toLocaleDateString('ko-KR'),
+                    situationInput: situation,
+                    ...parsedData
+                };
+
+                renderChapterUI();
+                switchTab('tab-script');
+            } else {
+                alert('대화 생성 중 오류가 발생했습니다:\n\n' + (lastError || 'API 연결에 실패했습니다.'));
             }
         }
 
