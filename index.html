@@ -1,1172 +1,764 @@
 <!DOCTYPE html>
-<html lang="ko" class="h-full bg-slate-900 text-slate-100">
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RealTalk AI - 미국 실생활 영어 학습 & 제미나이 연동</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google Fonts: Inter & Noto Sans KR -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'Noto Sans KR', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#f0f6ff',
-              100: '#e0edff',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8',
-              800: '#1e40af',
-              900: '#1e3a8a',
-            },
-            accent: {
-              500: '#10b981',
-              600: '#059669',
-            }
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>미국 실생활 영어 학습 - Gemini AI</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #080d1a;
+            color: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-      }
-    }
-  </script>
-
-  <style>
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0f172a;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-    }
-
-    /* Flip Card Animation */
-    .perspective-1000 {
-      perspective: 1000px;
-    }
-    .transform-style-3d {
-      transform-style: preserve-3d;
-    }
-    .backface-hidden {
-      backface-visibility: hidden;
-    }
-    .rotate-y-180 {
-      transform: rotateY(180deg);
-    }
-
-    /* Pulse Glow */
-    .glow-effect {
-      box-shadow: 0 0 25px -5px rgba(59, 130, 246, 0.4);
-    }
-
-    .glass-card {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-  </style>
+        .nav-tab.active {
+            background-color: #1e293b;
+            color: #ffffff;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .card-bg {
+            background-color: #111827;
+            border: 1px solid #1f2937;
+        }
+        .card-header-bg {
+            background-color: #172033;
+            border: 1px solid #233048;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b1329;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
 </head>
-<body class="h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-brand-500 selection:text-white">
+<body class="min-h-screen flex flex-col">
 
-  <!-- Navigation Header -->
-  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 lg:px-8 py-3">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <!-- Logo & Title -->
-      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('generator')">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
-          <i class="fa-solid me-0 fa-wand-magic-sparkles text-lg"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-lg leading-tight tracking-tight flex items-center gap-2">
-            RealTalk AI <span class="text-xs bg-brand-500/20 text-brand-400 border border-brand-500/30 px-2 py-0.5 rounded-full font-medium">Gemini Pro</span>
-          </h1>
-          <p class="text-xs text-slate-400">미국 현지 실생활 영어 회화 생성 & 학습</p>
-        </div>
-      </div>
-
-      <!-- Quick Action Stats & Settings -->
-      <div class="flex items-center space-x-3">
-        <!-- Saved Count Badge -->
-        <div class="hidden sm:flex items-center space-x-2 bg-slate-800 border border-slate-700/60 px-3 py-1.5 rounded-lg text-xs text-slate-300">
-          <i class="fa-solid fa-bookmark text-brand-400"></i>
-          <span>저장된 챕터: <strong id="header-saved-count" class="text-white font-semibold">0</strong>개</span>
-        </div>
-
-        <!-- API Key Settings Modal Trigger -->
-        <button onclick="openSettingsModal()" class="flex items-center space-x-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 transition">
-          <i class="fa-solid fa-key text-amber-400"></i>
-          <span class="hidden md:inline">API 키 설정</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Navigation Tabs -->
-  <nav class="bg-slate-900 border-b border-slate-800/80 sticky top-[61px] z-30">
-    <div class="max-w-7xl mx-auto px-4 flex space-x-1 overflow-x-auto no-scrollbar">
-      <button id="tab-btn-generator" onclick="switchTab('generator')" class="tab-btn flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 border-brand-500 text-brand-400 whitespace-nowrap transition">
-        <i class="fa-solid fa-plus-circle"></i>
-        <span>1. 상황 입력 & 생성</span>
-      </button>
-      <button id="tab-btn-dialogue" onclick="switchTab('dialogue')" class="tab-btn flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition">
-        <i class="fa-solid fa-comments"></i>
-        <span>2. 대화 학습 & 음성</span>
-      </button>
-      <button id="tab-btn-expressions" onclick="switchTab('expressions')" class="tab-btn flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition">
-        <i class="fa-solid fa-lightbulb"></i>
-        <span>3. 필수 표현 암기</span>
-      </button>
-      <button id="tab-btn-library" onclick="switchTab('library')" class="tab-btn flex items-center space-x-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap transition">
-        <i class="fa-solid fa-folder-open"></i>
-        <span>4. 보관함</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Main Content Area -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-6 overflow-y-auto">
-
-    <!-- ================= VIEW 1: CHAPTER GENERATOR ================= -->
-    <section id="view-generator" class="space-y-6">
-      <!-- Banner -->
-      <div class="glass-card rounded-2xl p-6 border border-brand-500/20 bg-gradient-to-r from-slate-900 via-brand-950/40 to-slate-900 relative overflow-hidden">
-        <div class="relative z-10 max-w-3xl space-y-2">
-          <span class="inline-block px-3 py-1 bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-semibold rounded-full mb-1">
-            <i class="fa-solid fa-robot mr-1"></i> Gemini 3.1 Powered Real English
-          </span>
-          <h2 class="text-2xl lg:text-3xl font-bold tracking-tight text-white">
-            어떤 미국 실생활 상황에서 대화해볼까요?
-          </h2>
-          <p class="text-sm text-slate-300">
-            원하는 상황을 자유롭게 입력하면, 제미나이가 **미국 현지에서 실제 가장 많이 사용하는 생생한 표현** 위주로 대화 스크립트와 핵심 표현을 자동 구성합니다.
-          </p>
-        </div>
-        <i class="fa-solid fa-language absolute -right-4 -bottom-6 text-9xl text-brand-500/10 pointer-events-none"></i>
-      </div>
-
-      <!-- Situation Input Box -->
-      <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-5">
-        <div>
-          <label for="situation-input" class="block text-sm font-semibold text-slate-200 mb-2">
-            <i class="fa-solid fa-pen-to-square text-brand-400 mr-1.5"></i> 상황 설명 입력 (한글 또는 영어)
-          </label>
-          <textarea id="situation-input" rows="3" 
-            placeholder="예: 스타벅스에서 덜 단 얼음 적게 넣은 아이스 라떼 주문하고 텀블러 할인 요청하기" 
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition text-sm lg:text-base leading-relaxed"></textarea>
-        </div>
-
-        <!-- Options Row -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Difficulty Level -->
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1.5">난이도 선택</label>
-            <div class="grid grid-cols-3 gap-2" id="difficulty-selector">
-              <button type="button" data-level="Beginner" onclick="selectDifficulty('Beginner')" class="diff-btn border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-lg text-slate-300 transition font-medium">초급 (기본)</button>
-              <button type="button" data-level="Intermediate" onclick="selectDifficulty('Intermediate')" class="diff-btn border border-brand-500 bg-brand-600/30 text-brand-300 text-xs py-2 rounded-lg transition font-semibold">중급 (실전)</button>
-              <button type="button" data-level="Advanced" onclick="selectDifficulty('Advanced')" class="diff-btn border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-lg text-slate-300 transition font-medium">고급 (원어민 슬랭)</button>
+    <!-- Header Navigation Bar -->
+    <header class="bg-[#0f172a] border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-600 text-white p-2 rounded-lg font-bold text-lg">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <h1 class="font-bold text-lg sm:text-xl text-white tracking-wide">Daily English AI</h1>
             </div>
-          </div>
-
-          <!-- Turn Count -->
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1.5">대화 길이 (턴 수)</label>
-            <select id="turns-select" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
-              <option value="4">4 턴 (짧은 대화 - 핵심 위주)</option>
-              <option value="6" selected>6 턴 (표준 대화 - 추천)</option>
-              <option value="8">8 턴 (긴 심화 대화)</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Preset Recommendation Buttons -->
-        <div>
-          <span class="block text-xs font-medium text-slate-400 mb-2">💡 자주 쓰는 실생활 추천 상황 클릭:</span>
-          <div class="flex flex-wrap gap-2">
-            <button onclick="setPresetSituation('스타벅스에서 옵션 추가해서 커스텀 음료 주문하기')" class="bg-slate-800 hover:bg-brand-900/40 border border-slate-700 hover:border-brand-500/50 text-xs text-slate-300 px-3 py-1.5 rounded-full transition">
-              ☕ 카페 커스텀 주문
+            
+            <button id="openApiModalBtn" onclick="toggleModal('apiModal', true)" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-sm transition">
+                <i class="fa-solid fa-key text-yellow-400"></i>
+                <span id="apiKeyStatusText">API 키 설정</span>
             </button>
-            <button onclick="setPresetSituation('미국 식당에서 팁 계산하고 계산서 나눠서 결제하기')" class="bg-slate-800 hover:bg-brand-900/40 border border-slate-700 hover:border-brand-500/50 text-xs text-slate-300 px-3 py-1.5 rounded-full transition">
-              🍔 식당 팁 & 분할 결제
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="max-w-6xl mx-auto px-4 flex border-t border-slate-800/60 overflow-x-auto">
+            <button onclick="switchTab('tab-input')" id="nav-tab-input" class="nav-tab active flex items-center space-x-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-circle-plus"></i>
+                <span>1. 상황 입력 & 생성</span>
             </button>
-            <button onclick="setPresetSituation('공항 수하물 수취대에서 제 짐이 안 나왔을 때 문의하기')" class="bg-slate-800 hover:bg-brand-900/40 border border-slate-700 hover:border-brand-500/50 text-xs text-slate-300 px-3 py-1.5 rounded-full transition">
-              ✈️ 공항 분실 수하물 문의
+            <button onclick="switchTab('tab-script')" id="nav-tab-script" class="nav-tab flex items-center space-x-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-comments"></i>
+                <span>2. 대화 학습 & 음성</span>
             </button>
-            <button onclick="setPresetSituation('호텔 체크인 시 높은 층 전망 좋은 방으로 레이트 체크아웃 부탁하기')" class="bg-slate-800 hover:bg-brand-900/40 border border-slate-700 hover:border-brand-500/50 text-xs text-slate-300 px-3 py-1.5 rounded-full transition">
-              🏨 호텔 체크인 & 요청
+            <button onclick="switchTab('tab-cards')" id="nav-tab-cards" class="nav-tab flex items-center space-x-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>3. 필수 표현 암기</span>
             </button>
-            <button onclick="setPresetSituation('마트에서 영수증 없이 제품 환불/교환 요청하기')" class="bg-slate-800 hover:bg-brand-900/40 border border-slate-700 hover:border-brand-500/50 text-xs text-slate-300 px-3 py-1.5 rounded-full transition">
-              🛍️ 쇼핑 환불 & 교환
+            <button onclick="switchTab('tab-storage')" id="nav-tab-storage" class="nav-tab flex items-center space-x-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-folder-open"></i>
+                <span>4. 보관함</span>
             </button>
-            <button onclick="setPresetSituation('우버 탑승 후 destination 변경하고 에어컨 조절 부탁하기')" class="bg-slate-800 hover:bg-brand-900/40 border border-slate-700 hover:border-brand-500/50 text-xs text-slate-300 px-3 py-1.5 rounded-full transition">
-              🚗 우버/택시 목적지 변경
-            </button>
-          </div>
         </div>
+    </header>
 
-        <!-- Submit Button -->
-        <button id="btn-generate" onclick="generateChapter()" class="w-full bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center justify-center space-x-2 text-base">
-          <i class="fa-solid fa-wand-magic-sparkles"></i>
-          <span>Gemini로 대화 스크립트 & 필수 표현 생성하기</span>
-        </button>
-      </div>
+    <!-- Main Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6">
 
-      <!-- Loading State Indicator -->
-      <div id="generation-loading" class="hidden glass-card rounded-2xl p-8 border border-brand-500/30 text-center space-y-4 glow-effect">
-        <div class="inline-block p-4 rounded-full bg-brand-500/20 text-brand-400 animate-spin">
-          <i class="fa-solid fa-circle-notch text-3xl"></i>
+        <!-- TAB 1: 상황 입력 & 생성 -->
+        <section id="tab-input" class="space-y-6">
+            <div class="card-bg p-6 rounded-2xl shadow-xl border border-slate-800">
+                <h2 class="text-xl font-bold mb-2 text-white flex items-center">
+                    <i class="fa-solid fa-[#3b82f6] fa-wand-magic-sparkles text-blue-400 mr-2"></i> 대화 상황 입력하기
+                </h2>
+                <p class="text-slate-400 text-sm mb-6">
+                    원하는 실생활 상황을 한국어나 영어로 자유롭게 적어주세요. Gemini가 원어민 표현으로 대화를 생성해 드립니다.
+                </p>
+
+                <form onsubmit="handleGenerate(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">학습 난이도 선택</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="level" value="Beginner" class="peer hidden">
+                                <div class="p-3 text-center rounded-xl border border-slate-700 bg-slate-900/50 peer-checked:border-blue-500 peer-checked:bg-blue-600/20 text-slate-300 font-medium text-sm transition">
+                                    초급 (Easy)
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="level" value="Intermediate" checked class="peer hidden">
+                                <div class="p-3 text-center rounded-xl border border-slate-700 bg-slate-900/50 peer-checked:border-blue-500 peer-checked:bg-blue-600/20 text-slate-300 font-medium text-sm transition">
+                                    중급 (Medium)
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="level" value="Advanced" class="peer hidden">
+                                <div class="p-3 text-center rounded-xl border border-slate-700 bg-slate-900/50 peer-checked:border-blue-500 peer-checked:bg-blue-600/20 text-slate-300 font-medium text-sm transition">
+                                    고급 (Native)
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">상황 설명</label>
+                        <textarea id="situationInput" rows="4" required
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                            placeholder="예: 미국 현지 스타벅스 매장에서 얼음 적게 넣고 시럽 반으로 줄여서 주문하기"></textarea>
+                    </div>
+
+                    <!-- Recommended Situation Tags -->
+                    <div>
+                        <span class="text-xs text-slate-400 mb-2 block">추천 키워드 태그:</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="setSituation('카페에서 커스텀 음료 주문하기 및 결제')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700">☕ 카페 주문</button>
+                            <button type="button" onclick="setSituation('호텔 체크인 및 높은 층의 뷰 좋은 방으로 요청하기')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700">🏨 호텔 체크인</button>
+                            <button type="button" onclick="setSituation('공항에서 분실된 수하물 찾기 및 문의하기')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700">✈️ 공항 분실물</button>
+                            <button type="button" onclick="setSituation('식당 예약 이름을 말하고 창가 자리 변경 문의')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700">🍽️ 식당 예약</button>
+                            <button type="button" onclick="setSituation('마트에서 옷 사이즈 변경 및 환불 문의하기')" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700">🛍️ 쇼핑 환불</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="generateBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 flex justify-center items-center space-x-2 transition">
+                        <i class="fa-solid fa-sparkles"></i>
+                        <span>AI 대화 스크립트 생성하기</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB 2: 대화 학습 & 음성 -->
+        <section id="tab-script" class="hidden space-y-4">
+            <!-- Top Controls Header Card -->
+            <div class="card-header-bg p-5 rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center space-x-2 mb-1">
+                        <span id="scriptBadgeLevel" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Intermediate</span>
+                        <span id="scriptDate" class="text-xs text-slate-400">2026. 10. 4.</span>
+                    </div>
+                    <h2 id="scriptTitle" class="text-2xl font-bold text-white mb-1">카페 주문하기</h2>
+                    <p id="scriptSummary" class="text-xs text-slate-400">상황: 미국 현지 매장에서 얼음 적게 넣고 시럽 반으로 줄여 주문하기</p>
+                </div>
+
+                <!-- Action Controls Bar -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Toggle Translation -->
+                    <button onclick="toggleKorean()" id="toggleKoreanBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 flex items-center space-x-1 transition">
+                        <i class="fa-solid fa-eye-slash"></i>
+                        <span id="toggleKoreanText">한글 해석 숨기기</span>
+                    </button>
+
+                    <!-- Continuous Play/Stop Button -->
+                    <button onclick="toggleContinuousPlay()" id="playAllBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow flex items-center space-x-1.5 transition">
+                        <i id="playAllIcon" class="fa-solid fa-play"></i>
+                        <span id="playAllText">전체 대화 연속 재생</span>
+                    </button>
+
+                    <!-- Speed Dropdown -->
+                    <select id="playbackSpeed" class="bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg px-2.5 py-2 outline-none">
+                        <option value="0.8">0.8x (느리게)</option>
+                        <option value="1.0" selected>1.0x (보통)</option>
+                        <option value="1.2">1.2x (빠르게)</option>
+                    </select>
+
+                    <!-- Repeat Count Dropdown (새로 추가된 기능) -->
+                    <select id="repeatCountSelect" class="bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg px-2.5 py-2 outline-none">
+                        <option value="1">1회 재생</option>
+                        <option value="3">3회 반복</option>
+                        <option value="5">5회 반복</option>
+                        <option value="-1">🔁 무한 반복</option>
+                    </select>
+
+                    <!-- Save to LocalStorage -->
+                    <button onclick="saveCurrentChapter()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-3 py-2 rounded-lg shadow flex items-center space-x-1 transition">
+                        <i class="fa-solid fa-bookmark"></i>
+                        <span>챕터 보관함 저장</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Repeat Progress Bar Indicator -->
+            <div id="repeatIndicator" class="hidden bg-slate-800/80 border border-slate-700 px-4 py-2 rounded-xl flex justify-between items-center text-xs text-blue-400">
+                <span><i class="fa-solid fa-arrows-rotate animate-spin mr-2"></i>연속 재생 중...</span>
+                <span id="repeatStatusText" class="font-bold">반복 회차: 1 / 1</span>
+            </div>
+
+            <!-- Dialogue Dialogue List Box -->
+            <div id="dialogueContainer" class="space-y-3">
+                <!-- Dialogue Bubbles generated dynamically -->
+            </div>
+        </section>
+
+        <!-- TAB 3: 필수 표현 암기 -->
+        <section id="tab-cards" class="hidden space-y-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <i class="fa-solid fa-key text-yellow-400 mr-2"></i> 반드시 외워야 할 핵심 표현
+                </h2>
+                <span class="text-xs text-slate-400">카드를 터치하면 상세 설명을 볼 수 있습니다.</span>
+            </div>
+
+            <div id="keyExpressionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Flashcards generated dynamically -->
+            </div>
+        </section>
+
+        <!-- TAB 4: 보관함 -->
+        <section id="tab-storage" class="hidden space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <i class="fa-solid fa-box-archive text-emerald-400 mr-2"></i> 저장된 학습 보관함
+                </h2>
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="storageSearch" oninput="renderStorageList()" placeholder="제목 또는 상황 검색..."
+                        class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
+                    <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                </div>
+            </div>
+
+            <div id="storageListContainer" class="space-y-3">
+                <!-- Stored Chapters rendered here -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- API Key Setting Modal -->
+    <div id="apiModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="card-bg w-full max-w-md p-6 rounded-2xl shadow-2xl border border-slate-700 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-white flex items-center">
+                    <i class="fa-solid fa-key text-yellow-400 mr-2"></i> Gemini API 키 설정
+                </h3>
+                <button onclick="toggleModal('apiModal', false)" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Google AI Studio에서 무료로 발급받은 API 키를 입력하세요. 키는 스마트폰 내부에만 안전하게 저장됩니다.
+            </p>
+            <div>
+                <input type="password" id="apiKeyInput" placeholder="AIzaSy..." 
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="flex justify-end space-x-2">
+                <a href="https://aistudio.google.com/" target="_blank" class="text-xs text-blue-400 hover:underline self-center mr-auto">
+                    무료 API 키 발급받기 ↗
+                </a>
+                <button onclick="saveApiKey()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition">
+                    저장하기
+                </button>
+            </div>
         </div>
-        <div class="space-y-1">
-          <h3 class="text-lg font-bold text-white">미국 원어민 실제 사용 표현 생성 중...</h3>
-          <p class="text-xs text-slate-400">제미나이가 한국어 번역 및 주요 필수 표현 팁을 정리하고 있습니다.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= VIEW 2: DIALOGUE STUDY ================= -->
-    <section id="view-dialogue" class="hidden space-y-6">
-      <!-- Chapter Header Box -->
-      <div class="glass-card rounded-2xl p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-1">
-          <div class="flex items-center space-x-2">
-            <span id="dialogue-level-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30">
-              중급
-            </span>
-            <span class="text-xs text-slate-400" id="dialogue-date">2026.10.04</span>
-          </div>
-          <h2 id="dialogue-title" class="text-xl lg:text-2xl font-bold text-white">스타벅스 커스텀 주문 스크립트</h2>
-          <p id="dialogue-summary" class="text-xs text-slate-300">상황: 얼음 줄이고 시럽 적게 넣은 카페 라떼 주문</p>
-        </div>
-
-        <!-- Toolbar Controls -->
-        <div class="flex flex-wrap items-center gap-2">
-          <!-- Toggle Korean -->
-          <button id="btn-toggle-korean" onclick="toggleKoreanTranslation()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs px-3 py-2 rounded-lg text-slate-200 transition flex items-center space-x-1.5">
-            <i class="fa-solid fa-eye text-brand-400"></i>
-            <span id="korean-toggle-text">한글 해석 숨기기</span>
-          </button>
-
-          <!-- Play Entire Dialogue TTS -->
-          <button onclick="playFullDialogueTTS()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs px-3.5 py-2 rounded-lg transition font-medium flex items-center space-x-1.5 shadow-md shadow-brand-600/20">
-            <i class="fa-solid fa-circle-play"></i>
-            <span>전체 대화 연속 재생</span>
-          </button>
-
-          <!-- TTS Speed Selection -->
-          <select id="tts-speed-select" onchange="updateTTSSpeed(this.value)" class="bg-slate-800 border border-slate-700 text-xs rounded-lg px-2 py-2 text-slate-200">
-            <option value="0.8">0.8x (천천히)</option>
-            <option value="1.0" selected>1.0x (보통)</option>
-            <option value="1.2">1.2x (빠르게)</option>
-          </select>
-
-          <!-- Save Chapter Button -->
-          <button id="btn-save-chapter" onclick="saveCurrentChapter()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-2 rounded-lg transition font-semibold flex items-center space-x-1.5 shadow-md shadow-emerald-600/20">
-            <i class="fa-solid fa-bookmark"></i>
-            <span>챕터 보관함 저장</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Dialogue Bubbles Container -->
-      <div id="dialogue-bubbles-container" class="space-y-4">
-        <!-- Bubbles rendered dynamically -->
-      </div>
-    </section>
-
-    <!-- ================= VIEW 3: KEY EXPRESSIONS ================= -->
-    <section id="view-expressions" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-5 border border-slate-800 flex items-center justify-between">
-        <div>
-          <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-star text-amber-400"></i> 반드시 외워야 할 원어민 핵심 표현
-          </h2>
-          <p class="text-xs text-slate-400 mt-1">카드를 클릭하면 상세한 한국어 뜻과 사용 팁을 확인할 수 있습니다.</p>
-        </div>
-        <span id="expr-count-badge" class="px-3 py-1 bg-amber-400/10 text-amber-300 border border-amber-400/20 rounded-full text-xs font-semibold">
-          0개 표현
-        </span>
-      </div>
-
-      <!-- Flashcard Grid -->
-      <div id="expressions-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Cards rendered dynamically -->
-      </div>
-    </section>
-
-    <!-- ================= VIEW 4: CHAPTER LIBRARY ================= -->
-    <section id="view-library" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-5 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 class="text-xl font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-box-archive text-brand-400"></i> 내 스마트폰/크롬 보관함
-          </h2>
-          <p class="text-xs text-slate-400 mt-1">스마트폰 내부(LocalStorage)에 저장된 영어 회화 챕터 목록입니다.</p>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="relative w-full md:w-64">
-          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-          <input type="text" id="library-search-input" onkeyup="filterLibrary()" placeholder="상황 또는 제목 검색..." 
-            class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500">
-        </div>
-      </div>
-
-      <!-- Saved List -->
-      <div id="library-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Library cards rendered dynamically -->
-      </div>
-    </section>
-
-  </main>
-
-  <!-- API Key Settings Modal -->
-  <div id="modal-settings" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-card bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-700 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-key text-amber-400"></i> Gemini API 키 설정
-        </h3>
-        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white text-lg">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="space-y-3 text-xs text-slate-300">
-        <p>
-          Google AI Studio에서 발급받은 무료 Gemini API 키를 입력하세요. API 키는 서포터버 및 외부에 전송되지 않으며, 현재 스마트폰/브라우저 내부에만 안전하게 저장됩니다.
-        </p>
-        <div>
-          <label for="input-api-key" class="block font-semibold mb-1 text-slate-200">Gemini API Key</label>
-          <input type="password" id="input-api-key" placeholder="AIzaSy..." 
-            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 font-mono focus:outline-none focus:border-brand-500">
-        </div>
-        <p class="text-[11px] text-slate-500">
-          * 키가 없더라도 시스템 기본 키 또는 데모 샘플 자동 생성 모드로 작동합니다.
-        </p>
-      </div>
-
-      <div class="flex items-center justify-end space-x-2 border-t border-slate-800 pt-3">
-        <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium">취소</button>
-        <button onclick="saveApiKeySettings()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-semibold shadow">저장하기</button>
-      </div>
     </div>
-  </div>
 
-  <!-- Speech Practice Overlay Modal -->
-  <div id="modal-practice" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="glass-card bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-700 shadow-2xl space-y-5">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-microphone text-rose-400"></i> 원어민 발음 따라 말하기 (Speech Practice)
-        </h3>
-        <button onclick="closePracticeModal()" class="text-slate-400 hover:text-white text-lg">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-
-      <div class="space-y-4">
-        <!-- Target Sentence Display -->
-        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-          <span class="text-[11px] font-semibold text-brand-400 uppercase tracking-wider">Target Sentence</span>
-          <p id="practice-target-text" class="text-base font-medium text-white leading-relaxed"></p>
-          <p id="practice-target-korean" class="text-xs text-slate-400"></p>
-        </div>
-
-        <!-- Recognized Speech Box -->
-        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2 min-h-[100px] flex flex-col justify-center text-center">
-          <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Your Speech</span>
-          <p id="practice-user-speech" class="text-sm font-medium text-amber-300 italic">"마이크 버튼을 누르고 말씀하세요..."</p>
-          <div id="practice-accuracy-badge" class="hidden text-xs font-bold px-3 py-1 rounded-full mx-auto w-max"></div>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between border-t border-slate-800 pt-3">
-        <button onclick="playTargetTTSInModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium flex items-center space-x-1">
-          <i class="fa-solid fa-volume-high text-brand-400"></i>
-          <span>다시 듣기</span>
-        </button>
-
-        <button id="btn-start-record" onclick="toggleSpeechRecording()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-lg shadow-rose-600/30">
-          <i class="fa-solid fa-microphone"></i>
-          <span id="record-btn-text">녹음 시작</span>
-        </button>
-      </div>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center hidden">
+        <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-white font-bold text-lg mb-1">Gemini가 대화를 작성 중입니다...</p>
+        <p class="text-slate-400 text-xs">미국 현지 실생활 원어민 표현을 추출하는 중입니다.</p>
     </div>
-  </div>
 
-  <script>
-    /* ==========================================================================
-       APP STATE & LOCAL STORAGE CONSTANTS
-       ========================================================================== */
-    const STORAGE_KEY_CHAPTERS = 'realtalk_saved_chapters';
-    const STORAGE_KEY_API_KEY = 'realtalk_gemini_api_key';
-
-    let appState = {
-      apiKey: '',
-      currentChapter: null,
-      savedChapters: [],
-      selectedDifficulty: 'Intermediate',
-      showKorean: true,
-      ttsSpeed: 1.0,
-      activeTab: 'generator',
-      speechRecognizer: null,
-      isRecording: false,
-      currentPracticeSentence: ''
-    };
-
-    /* Default Mock Fallback Chapter (In case API Key is not set or network fails) */
-    const mockDemoChapter = {
-      id: 'demo-chapter-1',
-      title: '스타벅스 음료 옵션 변경 & 커스텀 주문',
-      situationSummary: '미국 현지 매장에서 얼음 적게 넣고 시럽 반으로 줄여 주문하기',
-      level: 'Intermediate',
-      createdAt: new Date().toLocaleDateString('ko-KR'),
-      dialogue: [
-        {
-          speaker: 'A',
-          speakerRole: 'Barista',
-          english: "Hi there! What can I get started for you today?",
-          korean: "안녕하세요! 오늘 어떤 걸로 준비해드릴까요?",
-          tip: "'get started for you'는 미국 서비스직 매장에서 흔히 쓰는 인삿말입니다."
-        },
-        {
-          speaker: 'B',
-          speakerRole: 'Customer',
-          english: "Hi! Can I get an iced vanilla latte, but hold the syrup a bit?",
-          korean: "안녕하세요! 아이스 바닐라 라떼 하나 주시겠어요? 그런데 시럽은 좀 적게 넣어주세요.",
-          tip: "'hold the ~'는 특정 재료를 빼거나 적게 달라고 할 때 유용한 필수 표현입니다."
-        },
-        {
-          speaker: 'A',
-          speakerRole: 'Barista',
-          english: "Sure thing! How many pumps of vanilla syrup would you like?",
-          korean: "네, 물론이죠! 바닐라 시럽은 몇 펌프 넣어드릴까요?",
-          tip: "미국 매장에서는 시럽 양을 'pumps' 단위로 물어봅니다."
-        },
-        {
-          speaker: 'B',
-          speakerRole: 'Customer',
-          english: "Just two pumps, please. And easy on the ice if possible.",
-          korean: "두 펌프만 넣어주세요. 그리고 가능하면 얼음도 적게 넣어주세요.",
-          tip: "'easy on the ice'는 '얼음 적게'를 뜻하는 가장 자연스러운 표현입니다."
-        },
-        {
-          speaker: 'A',
-          speakerRole: 'Barista',
-          english: "Got it. That'll be $5.75. Will that be all for you?",
-          korean: "알겠습니다. 총 5달러 75센트입니다. 더 필요한 건 없으신가요?",
-          tip: "'Will that be all for you?'는 주문 마무리를 묻는 기본 문장입니다."
-        },
-        {
-          speaker: 'B',
-          speakerRole: 'Customer',
-          english: "Yes, that's it. I'll pay with Apple Pay.",
-          korean: "네, 그게 다예요. 애플페이로 결제할게요.",
-          tip: "'That's it'은 '그게 전부입니다'라는 깔끔한 표현입니다."
-        }
-      ],
-      keyExpressions: [
-        {
-          expression: "Hold the [ingredient]",
-          meaning: "~을 빼다 / 적게 넣다",
-          explanation: "음식이나 음료에서 특정 재료를 제외해달라고 요청할 때 씁니다.",
-          example: "Can I get a cheeseburger, but hold the pickles?"
-        },
-        {
-          expression: "Easy on the ice",
-          meaning: "얼음 적게 주실 수 있나요?",
-          explanation: "Light ice 보다 미국 실생활에서 매우 빈번하게 쓰이는 영미권 회화 표현입니다.",
-          example: "I'd like an iced matcha latte, easy on the ice."
-        },
-        {
-          expression: "Will that be all for you?",
-          meaning: "주문 더 필요한 건 없으신가요?",
-          explanation: "계산 전 점원이 주문 완료 여부를 확인할 때 자주 묻는 관용 표현입니다.",
-          example: "Will that be all for you today, sir?"
-        },
-        {
-          expression: "Two pumps of [syrup]",
-          meaning: "시럽 두 번 펌핑",
-          explanation: "미국 카페에서는 당도 조절 시 시럽 펌핑 횟수로 주문합니다.",
-          example: "Make it just one pump of hazelnut."
-        }
-      ]
-    };
-
-    // Initialize App on DOM Loaded
-    window.addEventListener('DOMContentLoaded', () => {
-      loadSavedData();
-      updateHeaderCount();
-
-      // Set default demo chapter
-      appState.currentChapter = mockDemoChapter;
-      renderDialogue();
-      renderKeyExpressions();
-
-      // Check speech recognition support
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        appState.speechRecognizer = new SpeechRecognition();
-        appState.speechRecognizer.lang = 'en-US';
-        appState.speechRecognizer.continuous = false;
-        appState.speechRecognizer.interimResults = true;
-
-        appState.speechRecognizer.onresult = (event) => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            transcript += event.results[i][0].transcript;
-          }
-          document.getElementById('practice-user-speech').innerText = `"${transcript}"`;
-          evaluateSpeechAccuracy(transcript, appState.currentPracticeSentence);
-        };
-
-        appState.speechRecognizer.onerror = (e) => {
-          console.error("Speech Rec Error:", e);
-          document.getElementById('practice-user-speech').innerText = "음성 인식이 중단되었습니다. 다시 시도해주세요.";
-          setRecordingState(false);
-        };
-
-        appState.speechRecognizer.onend = () => {
-          setRecordingState(false);
-        };
-      }
-    });
-
-    // Load LocalStorage Data
-    function loadSavedData() {
-      const savedKey = localStorage.getItem(STORAGE_KEY_API_KEY);
-      if (savedKey) {
-        appState.apiKey = savedKey;
-        document.getElementById('input-api-key').value = savedKey;
-      }
-
-      const savedChapters = localStorage.getItem(STORAGE_KEY_CHAPTERS);
-      if (savedChapters) {
-        try {
-          appState.savedChapters = JSON.parse(savedChapters);
-        } catch(e) {
-          appState.savedChapters = [];
-        }
-      }
-    }
-
-    function saveSavedChaptersToStorage() {
-      localStorage.setItem(STORAGE_KEY_CHAPTERS, JSON.stringify(appState.savedChapters));
-      updateHeaderCount();
-      renderLibraryList();
-    }
-
-    function updateHeaderCount() {
-      document.getElementById('header-saved-count').innerText = appState.savedChapters.length;
-    }
-
-    // Tab Switcher
-    function switchTab(tabId) {
-      appState.activeTab = tabId;
-      const tabs = ['generator', 'dialogue', 'expressions', 'library'];
-      
-      tabs.forEach(t => {
-        const viewEl = document.getElementById(`view-${t}`);
-        const btnEl = document.getElementById(`tab-btn-${t}`);
+    <!-- Application JavaScript Logic -->
+    <script>
+        // Global State Variables
+        let apiKey = localStorage.getItem('GEMINI_API_KEY') || '';
+        let currentChapter = null;
+        let savedChapters = JSON.parse(localStorage.getItem('SAVED_ENGLISH_CHAPTERS') || '[]');
+        let isKoreanHidden = false;
         
-        if (t === tabId) {
-          viewEl.classList.remove('hidden');
-          btnEl.classList.add('border-brand-500', 'text-brand-400');
-          btnEl.classList.remove('border-transparent', 'text-slate-400');
-        } else {
-          viewEl.classList.add('hidden');
-          btnEl.classList.remove('border-brand-500', 'text-brand-400');
-          btnEl.classList.add('border-transparent', 'text-slate-400');
-        }
-      });
+        // Continuous playback state
+        let isPlaying = false;
+        let currentSentenceIndex = 0;
+        let currentRepeatIndex = 1;
+        let targetRepeatCount = 1;
 
-      if (tabId === 'library') {
-        renderLibraryList();
-      }
-    }
-
-    function setPresetSituation(text) {
-      document.getElementById('situation-input').value = text;
-    }
-
-    function selectDifficulty(level) {
-      appState.selectedDifficulty = level;
-      const btns = document.querySelectorAll('#difficulty-selector .diff-btn');
-      btns.forEach(btn => {
-        if (btn.getAttribute('data-level') === level) {
-          btn.className = "diff-btn border border-brand-500 bg-brand-600/30 text-brand-300 text-xs py-2 rounded-lg transition font-semibold";
-        } else {
-          btn.className = "diff-btn border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs py-2 rounded-lg text-slate-300 transition font-medium";
-        }
-      });
-    }
-
-    // Generate Chapter via Gemini API
-    async function generateChapter() {
-      const situationText = document.getElementById('situation-input').value.trim();
-      if (!situationText) {
-        alert("상황 설명을 입력하거나 추천 버튼을 선택해주세요!");
-        return;
-      }
-
-      const turnsCount = document.getElementById('turns-select').value;
-      const difficulty = appState.selectedDifficulty;
-
-      document.getElementById('generation-loading').classList.remove('hidden');
-      document.getElementById('btn-generate').disabled = true;
-
-      const systemPrompt = `You are an expert native American English instructor.
-Generate a high-quality, authentic dialogue script based on the user's situation.
-
-Strict Rules:
-1. Use real-life, contemporary American English expressions naturally used in daily life in the USA.
-2. The dialogue MUST alternate between Speaker A and Speaker B for ${turnsCount} total turns.
-3. Include Korean translation for each dialogue sentence.
-4. Provide a practical expression tip for dialogue lines when appropriate.
-5. Extract 3 to 5 mandatory key expressions/idioms from the dialogue with detailed explanation and example sentences.
-6. Return STRICT VALID JSON adhering exactly to the JSON schema below without any extra markdown wrapper or code blocks.`;
-
-      const userQuery = `Situation: "${situationText}"
-Target Difficulty: ${difficulty}
-Dialogue Turns: ${turnsCount}`;
-
-      // Gemini REST Endpoint Payload
-      const payload = {
-        contents: [
-          { role: 'user', parts: [{ text: userQuery }] }
-        ],
-        systemInstruction: {
-          parts: [{ text: systemPrompt }]
-        },
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              "title": { "type": "STRING" },
-              "situationSummary": { "type": "STRING" },
-              "level": { "type": "STRING" },
-              "dialogue": {
-                "type": "ARRAY",
-                "items": {
-                  "type": "OBJECT",
-                  "properties": {
-                    "speaker": { "type": "STRING" },
-                    "speakerRole": { "type": "STRING" },
-                    "english": { "type": "STRING" },
-                    "korean": { "type": "STRING" },
-                    "tip": { "type": "STRING" }
-                  },
-                  "required": ["speaker", "speakerRole", "english", "korean"]
-                }
-              },
-              "keyExpressions": {
-                "type": "ARRAY",
-                "items": {
-                  "type": "OBJECT",
-                  "properties": {
-                    "expression": { "type": "STRING" },
-                    "meaning": { "type": "STRING" },
-                    "explanation": { "type": "STRING" },
-                    "example": { "type": "STRING" }
-                  },
-                  "required": ["expression", "meaning", "explanation", "example"]
-                }
-              }
-            },
-            "required": ["title", "situationSummary", "level", "dialogue", "keyExpressions"]
-          }
-        }
-      };
-
-      const apiKey = appState.apiKey || ""; // Will fallback or use entered API key
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-      try {
-        let response = await fetchWithRetry(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+        // On Page Load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateApiKeyStatus();
+            renderStorageList();
+            
+            // If no chapter loaded, load dummy or first stored chapter
+            if (savedChapters.length > 0) {
+                loadChapter(savedChapters[0].id);
+            } else {
+                loadDefaultSampleChapter();
+            }
         });
 
-        const result = await response.json();
-        const rawJsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!rawJsonText) {
-          throw new Error("Invalid response structure from Gemini API");
+        // Toggle Modals
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
         }
 
-        const parsedData = JSON.parse(rawJsonText);
-        
-        // Construct New Chapter Object
-        const newChapter = {
-          id: 'chapter-' + Date.now(),
-          title: parsedData.title || situationText,
-          situationSummary: parsedData.situationSummary || situationText,
-          level: parsedData.level || difficulty,
-          createdAt: new Date().toLocaleDateString('ko-KR'),
-          dialogue: parsedData.dialogue || [],
-          keyExpressions: parsedData.keyExpressions || []
-        };
-
-        appState.currentChapter = newChapter;
-
-        // Auto Save to local storage
-        saveCurrentChapterSilently();
-
-        // Render & Move to Dialogue Tab
-        renderDialogue();
-        renderKeyExpressions();
-        switchTab('dialogue');
-
-      } catch (err) {
-        console.error("Gemini Generation Error:", err);
-        alert("Gemini API 연동 중 오류가 발생했습니다. 샘플 모드로 전환하거나 API Key를 확인해주세요.\n오류: " + err.message);
-        
-        // Fallback demo for seamless experience
-        appState.currentChapter = { ...mockDemoChapter, id: 'chapter-' + Date.now(), title: situationText };
-        renderDialogue();
-        renderKeyExpressions();
-        switchTab('dialogue');
-      } finally {
-        document.getElementById('generation-loading').classList.add('hidden');
-        document.getElementById('btn-generate').disabled = false;
-      }
-    }
-
-    // Fetch with Exponential Backoff
-    async function fetchWithRetry(url, options, retries = 2, backoff = 1000) {
-      try {
-        const res = await fetch(url, options);
-        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-        return res;
-      } catch (err) {
-        if (retries > 0) {
-          await new Promise(r => setTimeout(r, backoff));
-          return fetchWithRetry(url, options, retries - 1, backoff * 2);
-        }
-        throw err;
-      }
-    }
-
-    // Render Dialogue Bubbles
-    function renderDialogue() {
-      const ch = appState.currentChapter;
-      if (!ch) return;
-
-      document.getElementById('dialogue-title').innerText = ch.title;
-      document.getElementById('dialogue-summary').innerText = `상황: ${ch.situationSummary}`;
-      document.getElementById('dialogue-level-badge').innerText = ch.level || 'Intermediate';
-      document.getElementById('dialogue-date').innerText = ch.createdAt || '';
-
-      const container = document.getElementById('dialogue-bubbles-container');
-      container.innerHTML = '';
-
-      ch.dialogue.forEach((item, index) => {
-        const isSpeakerA = item.speaker === 'A';
-        
-        const itemEl = document.createElement('div');
-        itemEl.className = `flex gap-3 my-3 ${isSpeakerA ? 'flex-row' : 'flex-row-reverse'}`;
-
-        const avatarBg = isSpeakerA ? 'bg-brand-600 text-white' : 'bg-emerald-600 text-white';
-        const bubbleBg = isSpeakerA ? 'bg-slate-900 border-slate-800' : 'bg-slate-900/90 border-brand-500/30';
-
-        itemEl.innerHTML = `
-          <!-- Avatar -->
-          <div class="flex-shrink-0 w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center font-bold text-xs shadow-md">
-            ${item.speaker}
-          </div>
-
-          <!-- Bubble Content -->
-          <div class="max-w-2xl space-y-2">
-            <!-- Speaker Role Label -->
-            <div class="text-[11px] text-slate-400 font-medium ${isSpeakerA ? 'text-left' : 'text-right'}">
-              ${item.speakerRole || ('Speaker ' + item.speaker)}
-            </div>
-
-            <!-- Card Bubble -->
-            <div class="glass-card p-4 rounded-2xl border ${bubbleBg} space-y-2 relative group shadow-sm">
-              <!-- English Text -->
-              <p class="text-sm lg:text-base font-medium text-slate-100 leading-relaxed">
-                ${escapeHTML(item.english)}
-              </p>
-
-              <!-- Korean Translation -->
-              <p class="korean-text text-xs lg:text-sm text-brand-300/90 font-sans border-t border-slate-800/80 pt-2 ${appState.showKorean ? '' : 'hidden'}">
-                ${escapeHTML(item.korean)}
-              </p>
-
-              <!-- Tip if available -->
-              ${item.tip ? `
-                <div class="text-[11px] text-amber-300/90 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-lg flex items-center gap-1.5 mt-2">
-                  <i class="fa-solid fa-lightbulb text-amber-400"></i>
-                  <span>${escapeHTML(item.tip)}</span>
-                </div>
-              ` : ''}
-
-              <!-- Action Bar -->
-              <div class="flex items-center space-x-3 border-t border-slate-800/60 pt-2 mt-2">
-                <!-- TTS Play -->
-                <button onclick="speakSentence('${escapeForJS(item.english)}')" class="text-xs text-slate-400 hover:text-brand-400 flex items-center gap-1 transition">
-                  <i class="fa-solid fa-volume-high"></i>
-                  <span>듣기</span>
-                </button>
-
-                <!-- Practice Speaking -->
-                <button onclick="openPracticeModal('${escapeForJS(item.english)}', '${escapeForJS(item.korean)}')" class="text-xs text-slate-400 hover:text-rose-400 flex items-center gap-1 transition">
-                  <i class="fa-solid fa-microphone"></i>
-                  <span>따라 말하기</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        `;
-
-        container.appendChild(itemEl);
-      });
-    }
-
-    function toggleKoreanTranslation() {
-      appState.showKorean = !appState.showKorean;
-      const texts = document.querySelectorAll('.korean-text');
-      texts.forEach(el => {
-        if (appState.showKorean) {
-          el.classList.remove('hidden');
-        } else {
-          el.classList.add('hidden');
-        }
-      });
-
-      document.getElementById('korean-toggle-text').innerText = appState.showKorean ? '한글 해석 숨기기' : '한글 해석 보기';
-    }
-
-    // Render Key Expressions
-    function renderKeyExpressions() {
-      const ch = appState.currentChapter;
-      if (!ch) return;
-
-      const grid = document.getElementById('expressions-grid');
-      grid.innerHTML = '';
-
-      document.getElementById('expr-count-badge').innerText = `${ch.keyExpressions.length}개 표현`;
-
-      ch.keyExpressions.forEach((expr, idx) => {
-        const card = document.createElement('div');
-        card.className = "glass-card p-5 rounded-2xl border border-slate-800 hover:border-amber-400/40 transition space-y-3 relative";
-
-        card.innerHTML = `
-          <div class="flex items-start justify-between gap-2">
-            <div class="space-y-1">
-              <span class="text-[10px] font-bold tracking-wider text-amber-400 uppercase bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">Key Expression ${idx + 1}</span>
-              <h3 class="text-lg font-bold text-white leading-tight">${escapeHTML(expr.expression)}</h3>
-            </div>
-            <button onclick="speakSentence('${escapeForJS(expr.expression)}')" class="p-2 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg transition">
-              <i class="fa-solid fa-volume-high"></i>
-            </button>
-          </div>
-
-          <div class="space-y-1">
-            <p class="text-sm font-semibold text-brand-300">💡 뜻: ${escapeHTML(expr.meaning)}</p>
-            <p class="text-xs text-slate-300 leading-relaxed">${escapeHTML(expr.explanation)}</p>
-          </div>
-
-          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 space-y-1 text-xs">
-            <span class="text-[10px] font-semibold text-slate-500 uppercase">Example Sentence</span>
-            <p class="text-slate-200 italic font-medium">"${escapeHTML(expr.example)}"</p>
-            <button onclick="speakSentence('${escapeForJS(expr.example)}')" class="text-[11px] text-slate-400 hover:text-brand-400 flex items-center gap-1 pt-1">
-              <i class="fa-solid fa-play"></i> 예문 발음 듣기
-            </button>
-          </div>
-        `;
-
-        grid.appendChild(card);
-      });
-    }
-
-    // TTS Speech Synthesis Engine
-    function speakSentence(text) {
-      if (!('speechSynthesis' in window)) {
-        alert("이 브라우저는 음성 합성(TTS)을 지원하지 않습니다.");
-        return;
-      }
-
-      window.speechSynthesis.cancel(); // stop current speaking
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = appState.ttsSpeed || 1.0;
-
-      // Select high quality US voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const usVoice = voices.find(v => v.lang === 'en-US' && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha')));
-      if (usVoice) utterance.voice = usVoice;
-
-      window.speechSynthesis.speak(utterance);
-    }
-
-    function updateTTSSpeed(speedVal) {
-      appState.ttsSpeed = parseFloat(speedVal);
-    }
-
-    function playFullDialogueTTS() {
-      if (!appState.currentChapter) return;
-      
-      const lines = appState.currentChapter.dialogue.map(d => d.english);
-      let index = 0;
-
-      function playNext() {
-        if (index < lines.length) {
-          const text = lines[index];
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = 'en-US';
-          utterance.rate = appState.ttsSpeed;
-
-          utterance.onend = () => {
-            index++;
-            setTimeout(playNext, 600); // 0.6s pause between speakers
-          };
-
-          window.speechSynthesis.speak(utterance);
-        }
-      }
-
-      window.speechSynthesis.cancel();
-      playNext();
-    }
-
-    // Speech Practice Modal Functions
-    function openPracticeModal(english, korean) {
-      appState.currentPracticeSentence = english;
-      document.getElementById('practice-target-text').innerText = english;
-      document.getElementById('practice-target-korean').innerText = korean;
-      document.getElementById('practice-user-speech').innerText = '"마이크 버튼을 누르고 따라 해보세요..."';
-      
-      const badge = document.getElementById('practice-accuracy-badge');
-      badge.classList.add('hidden');
-
-      document.getElementById('modal-practice').classList.remove('hidden');
-    }
-
-    function closePracticeModal() {
-      if (appState.isRecording && appState.speechRecognizer) {
-        appState.speechRecognizer.stop();
-      }
-      document.getElementById('modal-practice').classList.add('hidden');
-    }
-
-    function playTargetTTSInModal() {
-      speakSentence(appState.currentPracticeSentence);
-    }
-
-    function toggleSpeechRecording() {
-      if (!appState.speechRecognizer) {
-        alert("이 크롬 브라우저 환경에서는 음성 인식을 사용할 수 없습니다.");
-        return;
-      }
-
-      if (appState.isRecording) {
-        appState.speechRecognizer.stop();
-        setRecordingState(false);
-      } else {
-        try {
-          appState.speechRecognizer.start();
-          setRecordingState(true);
-        } catch(e) {
-          console.error(e);
-        }
-      }
-    }
-
-    function setRecordingState(recording) {
-      appState.isRecording = recording;
-      const btn = document.getElementById('btn-start-record');
-      const text = document.getElementById('record-btn-text');
-
-      if (recording) {
-        btn.className = "px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold flex items-center space-x-2 shadow-lg animate-pulse";
-        text.innerText = "듣는 중... (말씀하세요)";
-      } else {
-        btn.className = "px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-lg shadow-rose-600/30";
-        text.innerText = "녹음 시작";
-      }
-    }
-
-    function evaluateSpeechAccuracy(userSpeech, targetSpeech) {
-      const cleanUser = userSpeech.toLowerCase().replace(/[^a-z0-9 ]/g, '');
-      const cleanTarget = targetSpeech.toLowerCase().replace(/[^a-z0-9 ]/g, '');
-
-      const userWords = cleanUser.split(' ');
-      const targetWords = cleanTarget.split(' ');
-
-      let matchCount = 0;
-      targetWords.forEach(w => {
-        if (userWords.includes(w)) matchCount++;
-      });
-
-      const accuracy = Math.round((matchCount / targetWords.length) * 100);
-      const badge = document.getElementById('practice-accuracy-badge');
-      badge.classList.remove('hidden');
-
-      if (accuracy >= 80) {
-        badge.className = "text-xs font-bold px-3 py-1 rounded-full mx-auto w-max bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
-        badge.innerText = `👏 훌륭합니다! 일치율: ${accuracy}%`;
-      } else if (accuracy >= 50) {
-        badge.className = "text-xs font-bold px-3 py-1 rounded-full mx-auto w-max bg-amber-500/20 text-amber-300 border border-amber-500/30";
-        badge.innerText = `👍 좋아요! 일치율: ${accuracy}% (다시 도전해보세요)`;
-      } else {
-        badge.className = "text-xs font-bold px-3 py-1 rounded-full mx-auto w-max bg-rose-500/20 text-rose-300 border border-rose-500/30";
-        badge.innerText = `💪 일치율: ${accuracy}% (천천히 다시 따라 해보세요)`;
-      }
-    }
-
-    // Save Chapter Functions
-    function saveCurrentChapterSilently() {
-      if (!appState.currentChapter) return;
-      
-      const existingIdx = appState.savedChapters.findIndex(c => c.id === appState.currentChapter.id);
-      if (existingIdx >= 0) {
-        appState.savedChapters[existingIdx] = appState.currentChapter;
-      } else {
-        appState.savedChapters.unshift(appState.currentChapter);
-      }
-      saveSavedChaptersToStorage();
-    }
-
-    function saveCurrentChapter() {
-      saveCurrentChapterSilently();
-      alert("스마트폰/브라우저 내 보관함에 저장되었습니다!");
-    }
-
-    function renderLibraryList() {
-      const container = document.getElementById('library-list-container');
-      container.innerHTML = '';
-
-      if (appState.savedChapters.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full text-center py-12 glass-card rounded-2xl border border-slate-800 space-y-3">
-            <i class="fa-solid fa-folder-open text-4xl text-slate-600"></i>
-            <p class="text-sm text-slate-400">저장된 회화 챕터가 없습니다.</p>
-            <button onclick="switchTab('generator')" class="text-xs bg-brand-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-brand-500">
-              새 챕터 생성하러 가기
-            </button>
-          </div>
-        `;
-        return;
-      }
-
-      const searchQuery = (document.getElementById('library-search-input')?.value || '').toLowerCase();
-
-      appState.savedChapters.forEach(ch => {
-        if (searchQuery && !ch.title.toLowerCase().includes(searchQuery) && !ch.situationSummary.toLowerCase().includes(searchQuery)) {
-          return;
+        function updateApiKeyStatus() {
+            const text = document.getElementById('apiKeyStatusText');
+            if (apiKey) {
+                text.innerText = 'API 키 등록됨';
+                text.classList.add('text-emerald-400');
+            } else {
+                text.innerText = 'API 키 설정 필요';
+                text.classList.remove('text-emerald-400');
+            }
         }
 
-        const card = document.createElement('div');
-        card.className = "glass-card p-5 rounded-2xl border border-slate-800 hover:border-brand-500/40 transition space-y-4 flex flex-col justify-between";
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput').value.trim();
+            if (input) {
+                apiKey = input;
+                localStorage.setItem('GEMINI_API_KEY', apiKey);
+                updateApiKeyStatus();
+                toggleModal('apiModal', false);
+                alert('API 키가 성공적으로 저장되었습니다!');
+            }
+        }
 
-        card.innerHTML = `
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">${ch.level || 'Intermediate'}</span>
-              <span class="text-[11px] text-slate-500">${ch.createdAt || ''}</span>
-            </div>
-            <h3 class="text-base font-bold text-white line-clamp-1">${escapeHTML(ch.title)}</h3>
-            <p class="text-xs text-slate-400 line-clamp-2">${escapeHTML(ch.situationSummary)}</p>
-          </div>
+        // Switch Tabs
+        function switchTab(tabId) {
+            ['tab-input', 'tab-script', 'tab-cards', 'tab-storage'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById('nav-' + id).classList.remove('active');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('nav-' + tabId).classList.add('active');
 
-          <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-            <div class="text-[11px] text-slate-400">
-              <span>대화 ${ch.dialogue ? ch.dialogue.length : 0}턴</span> • <span>표현 ${ch.keyExpressions ? ch.keyExpressions.length : 0}개</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <button onclick="loadChapterFromLibrary('${ch.id}')" class="p-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-xs font-medium transition" title="학습하기">
-                <i class="fa-solid fa-book-open"></i>
-              </button>
-              <button onclick="deleteChapterFromLibrary('${ch.id}')" class="p-2 bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 rounded-lg text-xs transition" title="삭제">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        `;
+            if (isPlaying) stopContinuousPlay();
+        }
 
-        container.appendChild(card);
-      });
+        function setSituation(text) {
+            document.getElementById('situationInput').value = text;
+        }
+
+        // Gemini API Generation Request
+        async function handleGenerate(e) {
+            e.preventDefault();
+            if (!apiKey) {
+                alert('Gemini API 키를 먼저 설정해 주세요.');
+                toggleModal('apiModal', true);
+                return;
+            }
+
+            const situation = document.getElementById('situationInput').value.trim();
+            const level = document.querySelector('input[name="level"]:checked').value;
+
+            if (!situation) return;
+
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+
+            const systemPrompt = `You are an expert native American English teacher. 
+Create a natural daily dialogue script based on the situation provided.
+Output MUST strictly be a valid JSON object without any Markdown wrapping or code fences.
+
+JSON Schema:
+{
+  "chapter_title": "Short title in Korean (e.g. 카페 주문하기)",
+  "situation_summary": "Brief summary in Korean",
+  "level": "${level}",
+  "dialogue": [
+    {
+      "speaker": "Speaker Name (e.g. Barista / Customer / Person A)",
+      "english": "English dialogue line",
+      "korean": "Korean translation"
     }
-
-    function filterLibrary() {
-      renderLibraryList();
+  ],
+  "key_expressions": [
+    {
+      "expression": "Mandatory English expression",
+      "meaning": "Korean meaning",
+      "tip": "Usage tip or explanation in Korean"
     }
+  ]
+}
 
-    function loadChapterFromLibrary(id) {
-      const found = appState.savedChapters.find(c => c.id === id);
-      if (found) {
-        appState.currentChapter = found;
-        renderDialogue();
-        renderKeyExpressions();
-        switchTab('dialogue');
-      }
-    }
+User Situation: "${situation}"`;
 
-    function deleteChapterFromLibrary(id) {
-      if (confirm("이 챕터를 보관함에서 삭제하시겠습니까?")) {
-        appState.savedChapters = appState.savedChapters.filter(c => c.id !== id);
-        saveSavedChaptersToStorage();
-      }
-    }
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: systemPrompt }] }]
+                    })
+                });
 
-    // Modal Helpers
-    function openSettingsModal() {
-      document.getElementById('modal-settings').classList.remove('hidden');
-    }
+                const data = await response.json();
+                document.getElementById('loadingOverlay').classList.add('hidden');
 
-    function closeSettingsModal() {
-      document.getElementById('modal-settings').classList.add('hidden');
-    }
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    let rawText = data.candidates[0].content.parts[0].text.trim();
+                    // Clean json Markdown backticks if present
+                    rawText = rawText.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
 
-    function saveApiKeySettings() {
-      const keyVal = document.getElementById('input-api-key').value.trim();
-      appState.apiKey = keyVal;
-      localStorage.setItem(STORAGE_KEY_API_KEY, keyVal);
-      closeSettingsModal();
-      alert("Gemini API 키가 안전하게 저장되었습니다.");
-    }
+                    const parsedData = JSON.parse(rawText);
+                    currentChapter = {
+                        id: Date.now(),
+                        date: new Date().toLocaleDateString('ko-KR'),
+                        situationInput: situation,
+                        ...parsedData
+                    };
 
-    // Utility String Escapers
-    function escapeHTML(str) {
-      if (!str) return '';
-      return str.replace(/[&<>'"]/g, 
-        tag => ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          "'": '&#39;',
-          '"': '&quot;'
-        }[tag] || tag)
-      );
-    }
+                    renderChapterUI();
+                    switchTab('tab-script');
+                } else {
+                    throw new Error('API 응답 형식이 올바르지 않습니다.');
+                }
+            } catch (err) {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                alert('대화 생성 중 오류가 발생했습니다: ' + err.message);
+            }
+        }
 
-    function escapeForJS(str) {
-      if (!str) return '';
-      return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, ' ');
-    }
-  </script>
+        // Render Current Chapter in UI
+        function renderChapterUI() {
+            if (!currentChapter) return;
+
+            document.getElementById('scriptTitle').innerText = currentChapter.chapter_title;
+            document.getElementById('scriptSummary').innerText = "상황: " + currentChapter.situation_summary;
+            document.getElementById('scriptBadgeLevel').innerText = currentChapter.level || 'Intermediate';
+            document.getElementById('scriptDate').innerText = currentChapter.date || new Date().toLocaleDateString('ko-KR');
+
+            // Render Dialogue List
+            const dialogueContainer = document.getElementById('dialogueContainer');
+            dialogueContainer.innerHTML = '';
+
+            currentChapter.dialogue.forEach((item, index) => {
+                const isUser = index % 2 !== 0;
+                const bubble = document.createElement('div');
+                bubble.className = `p-4 rounded-xl card-bg border border-slate-800 transition duration-200 ${isUser ? 'border-l-4 border-l-blue-500' : 'border-l-4 border-l-slate-600'}`;
+                bubble.id = `sentence-box-${index}`;
+
+                bubble.innerHTML = `
+                    <div class="flex justify-between items-start mb-1.5">
+                        <span class="text-xs font-bold text-slate-400">${item.speaker}</span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="playSingleTTS('${escapeQuote(item.english)}', ${index})" class="text-blue-400 hover:text-blue-300 text-sm p-1">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                            <button onclick="startSTT('${escapeQuote(item.english)}', ${index})" class="text-slate-400 hover:text-red-400 text-sm p-1">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-white font-medium text-base mb-1 tracking-wide">${item.english}</p>
+                    <p class="korean-text text-sm text-slate-400 ${isKoreanHidden ? 'hidden' : ''}">${item.korean}</p>
+                    <div id="stt-result-${index}" class="text-xs text-emerald-400 font-mono mt-1 hidden"></div>
+                `;
+                dialogueContainer.appendChild(bubble);
+            });
+
+            // Render Key Expressions Flashcards
+            const cardsContainer = document.getElementById('keyExpressionsContainer');
+            cardsContainer.innerHTML = '';
+
+            currentChapter.key_expressions.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = 'card-bg p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition space-y-2';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-lg font-bold text-yellow-400">${item.expression}</h4>
+                        <button onclick="playSingleTTS('${escapeQuote(item.expression)}')" class="text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-volume-high text-sm"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm font-semibold text-white">${item.meaning}</p>
+                    <p class="text-xs text-slate-400 leading-relaxed bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">${item.tip}</p>
+                `;
+                cardsContainer.appendChild(card);
+            });
+        }
+
+        // Helper to escape single quotes
+        function escapeQuote(str) {
+            return str.replace(/'/g, "\\'");
+        }
+
+        // Toggle Korean Translations visibility
+        function toggleKorean() {
+            isKoreanHidden = !isKoreanHidden;
+            const elements = document.querySelectorAll('.korean-text');
+            elements.forEach(el => {
+                if (isKoreanHidden) el.classList.add('hidden');
+                else el.classList.remove('hidden');
+            });
+
+            document.getElementById('toggleKoreanText').innerText = isKoreanHidden ? '한글 해석 보이기' : '한글 해석 숨기기';
+        }
+
+        // Single Sentence Text-to-Speech
+        function playSingleTTS(text, highlightIndex = -1) {
+            window.speechSynthesis.cancel();
+            const rate = parseFloat(document.getElementById('playbackSpeed').value);
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = rate;
+
+            if (highlightIndex >= 0) {
+                highlightSentence(highlightIndex);
+            }
+
+            utterance.onend = () => {
+                if (highlightIndex >= 0 && !isPlaying) {
+                    unhighlightSentence(highlightIndex);
+                }
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Continuous Playback Logic with Repetition Support
+        function toggleContinuousPlay() {
+            if (isPlaying) {
+                stopContinuousPlay();
+            } else {
+                startContinuousPlay();
+            }
+        }
+
+        function startContinuousPlay() {
+            if (!currentChapter || !currentChapter.dialogue.length) return;
+
+            isPlaying = true;
+            currentSentenceIndex = 0;
+            currentRepeatIndex = 1;
+            targetRepeatCount = parseInt(document.getElementById('repeatCountSelect').value);
+
+            // Update Play button UI
+            document.getElementById('playAllBtn').classList.replace('bg-blue-600', 'bg-red-600');
+            document.getElementById('playAllBtn').classList.replace('hover:bg-blue-500', 'hover:bg-red-500');
+            document.getElementById('playAllIcon').className = 'fa-solid fa-square';
+            document.getElementById('playAllText').innerText = '재생 정지';
+
+            document.getElementById('repeatIndicator').classList.remove('hidden');
+            updateRepeatStatusUI();
+
+            playNextSentenceInSequence();
+        }
+
+        function stopContinuousPlay() {
+            isPlaying = false;
+            window.speechSynthesis.cancel();
+
+            // Revert Play button UI
+            document.getElementById('playAllBtn').classList.replace('bg-red-600', 'bg-blue-600');
+            document.getElementById('playAllBtn').classList.replace('hover:bg-red-500', 'hover:bg-blue-500');
+            document.getElementById('playAllIcon').className = 'fa-solid fa-play';
+            document.getElementById('playAllText').innerText = '전체 대화 연속 재생';
+
+            document.getElementById('repeatIndicator').classList.add('hidden');
+
+            // Clear sentence highlights
+            document.querySelectorAll('[id^="sentence-box-"]').forEach(box => {
+                box.classList.remove('bg-blue-900/30', 'border-blue-500');
+            });
+        }
+
+        function updateRepeatStatusUI() {
+            const statusText = document.getElementById('repeatStatusText');
+            if (targetRepeatCount === -1) {
+                statusText.innerText = `반복 회차: ${currentRepeatIndex}회째 (무한 반복 중)`;
+            } else {
+                statusText.innerText = `반복 회차: ${currentRepeatIndex} / ${targetRepeatCount}`;
+            }
+        }
+
+        function playNextSentenceInSequence() {
+            if (!isPlaying) return;
+
+            const dialogueList = currentChapter.dialogue;
+
+            // Check if full script finished once
+            if (currentSentenceIndex >= dialogueList.length) {
+                // If repeat target reached
+                if (targetRepeatCount !== -1 && currentRepeatIndex >= targetRepeatCount) {
+                    stopContinuousPlay();
+                    return;
+                }
+                // Loop to next repeat turn
+                currentRepeatIndex++;
+                currentSentenceIndex = 0;
+                updateRepeatStatusUI();
+            }
+
+            const item = dialogueList[currentSentenceIndex];
+            highlightSentence(currentSentenceIndex);
+
+            const rate = parseFloat(document.getElementById('playbackSpeed').value);
+            const utterance = new SpeechSynthesisUtterance(item.english);
+            utterance.lang = 'en-US';
+            utterance.rate = rate;
+
+            utterance.onend = () => {
+                if (!isPlaying) return;
+                unhighlightSentence(currentSentenceIndex);
+                currentSentenceIndex++;
+                setTimeout(playNextSentenceInSequence, 600); // 0.6s pause between lines
+            };
+
+            utterance.onerror = () => {
+                stopContinuousPlay();
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function highlightSentence(index) {
+            document.querySelectorAll('[id^="sentence-box-"]').forEach(box => {
+                box.classList.remove('bg-blue-950/60', 'ring-1', 'ring-blue-500');
+            });
+            const box = document.getElementById(`sentence-box-${index}`);
+            if (box) {
+                box.classList.add('bg-blue-950/60', 'ring-1', 'ring-blue-500');
+                box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function unhighlightSentence(index) {
+            const box = document.getElementById(`sentence-box-${index}`);
+            if (box) {
+                box.classList.remove('bg-blue-950/60', 'ring-1', 'ring-blue-500');
+            }
+        }
+
+        // Speech Recognition (STT) Pronunciation practice
+        function startSTT(targetText, index) {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 브라우저를 사용해 주세요.');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+
+            const resultDiv = document.getElementById(`stt-result-${index}`);
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerText = "🎙️ 듣는 중... 말씀해 주세요.";
+
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                const spokenText = event.results[0][0].transcript;
+                resultDiv.innerText = `[내 발음]: "${spokenText}"`;
+            };
+
+            recognition.onerror = () => {
+                resultDiv.innerText = "⚠️ 음성 인식에 실패했습니다. 다시 시도해 주세요.";
+            };
+        }
+
+        // Local Storage Management
+        function saveCurrentChapter() {
+            if (!currentChapter) return;
+
+            const existingIndex = savedChapters.findIndex(ch => ch.id === currentChapter.id);
+            if (existingIndex >= 0) {
+                savedChapters[existingIndex] = currentChapter;
+            } else {
+                savedChapters.unshift(currentChapter);
+            }
+
+            localStorage.setItem('SAVED_ENGLISH_CHAPTERS', JSON.stringify(savedChapters));
+            renderStorageList();
+            alert('보관함에 저장되었습니다!');
+        }
+
+        function renderStorageList() {
+            const container = document.getElementById('storageListContainer');
+            const query = document.getElementById('storageSearch').value.toLowerCase();
+            container.innerHTML = '';
+
+            const filtered = savedChapters.filter(ch => 
+                ch.chapter_title.toLowerCase().includes(query) || 
+                ch.situation_summary.toLowerCase().includes(query)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm">보관함에 저장된 챕터가 없습니다.</div>`;
+                return;
+            }
+
+            filtered.forEach(ch => {
+                const item = document.createElement('div');
+                item.className = 'card-bg p-4 rounded-xl border border-slate-800 flex justify-between items-center hover:border-slate-700 transition';
+                item.innerHTML = `
+                    <div onclick="loadChapter(${ch.id})" class="cursor-pointer flex-1 mr-4">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <span class="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-semibold">${ch.level || 'Intermediate'}</span>
+                            <span class="text-xs text-slate-500">${ch.date || ''}</span>
+                        </div>
+                        <h4 class="font-bold text-white text-base hover:text-blue-400 transition">${ch.chapter_title}</h4>
+                        <p class="text-xs text-slate-400 line-clamp-1">${ch.situation_summary}</p>
+                    </div>
+                    <button onclick="deleteChapter(${ch.id})" class="text-slate-500 hover:text-red-400 p-2 text-sm transition">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function loadChapter(id) {
+            const found = savedChapters.find(ch => ch.id === id);
+            if (found) {
+                currentChapter = found;
+                renderChapterUI();
+                switchTab('tab-script');
+            }
+        }
+
+        function deleteChapter(id) {
+            if (confirm('이 챕터를 보관함에서 삭제하시겠습니까?')) {
+                savedChapters = savedChapters.filter(ch => ch.id !== id);
+                localStorage.setItem('SAVED_ENGLISH_CHAPTERS', JSON.stringify(savedChapters));
+                renderStorageList();
+            }
+        }
+
+        // Default Sample Data
+        function loadDefaultSampleChapter() {
+            currentChapter = {
+                id: 1001,
+                date: "2026. 10. 4.",
+                chapter_title: "카페 주문하기",
+                situation_summary: "미국 현지 매장에서 얼음 적게 넣고 시럽 반으로 줄여 주문하기",
+                level: "Intermediate",
+                dialogue: [
+                    { speaker: "Barista", english: "Hi! What can I get started for you today?", korean: "안녕하세요! 오늘 어떤 것으로 주문하시겠어요?" },
+                    { speaker: "Customer", english: "Hi, I'd like an iced vanilla latte, please.", korean: "안녕하세요, 아이스 바닐라 라떼 한 잔 부탁합니다." },
+                    { speaker: "Barista", english: "Sure thing! What size would you like?", korean: "네! 사이즈는 어떤 것으로 하시겠어요?" },
+                    { speaker: "Customer", english: "Grande, please. Could you also make it with light ice and half syrup?", korean: "그란데 사이즈로 주세요. 그리고 얼음은 적게 넣고 시럽은 반으로 줄여주실 수 있나요?" },
+                    { speaker: "Barista", english: "No problem at all. Anything else for you?", korean: "그럼요, 문제없습니다. 더 필요한 건 없으신가요?" }
+                ],
+                key_expressions: [
+                    { expression: "What can I get started for you?", meaning: "무엇을 주문하시겠어요?", tip: "미국 카페나 식당에서 주문을 받을 때 가장 흔하게 쓰이는 인사말입니다." },
+                    { expression: "Light ice", meaning: "얼음 적게", tip: "음료 주문 시 'easy on the ice' 또는 'light ice'라고 표현합니다." },
+                    { expression: "Half syrup", meaning: "시럽 반으로", tip: "단맛을 줄이고 싶을 때 단수를 지정하여 커스텀할 수 있습니다." }
+                ]
+            };
+            renderChapterUI();
+        }
+    </script>
 </body>
 </html>
