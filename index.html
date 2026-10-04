@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>미국 실생활 영어 학습 - Gemini AI Pro</title>
+    <title>미국 실생활 영어 학습 - Gemini AI</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -42,7 +42,7 @@
                 <div class="bg-blue-600 text-white p-2 rounded-lg font-bold text-lg">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </div>
-                <h1 class="font-bold text-lg sm:text-xl text-white tracking-wide">Daily English AI Pro</h1>
+                <h1 class="font-bold text-lg sm:text-xl text-white tracking-wide">Daily English AI</h1>
             </div>
             
             <button id="openApiModalBtn" onclick="toggleModal('apiModal', true)" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 text-sm transition">
@@ -82,7 +82,7 @@
                     <i class="fa-solid fa-wand-magic-sparkles text-blue-400 mr-2"></i> 대화 상황 입력하기
                 </h2>
                 <p class="text-slate-400 text-sm mb-6">
-                    원하는 실생활 상황을 한국어나 영어로 자유롭게 적어주세요. Gemini Pro가 원어민 표현으로 대화를 생성해 드립니다.
+                    원하는 실생활 상황을 한국어나 영어로 자유롭게 적어주세요. Gemini가 원어민 표현으로 대화를 생성해 드립니다.
                 </p>
 
                 <form onsubmit="handleGenerate(event)" class="space-y-4">
@@ -130,7 +130,7 @@
 
                     <button type="submit" id="generateBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-600/30 flex justify-center items-center space-x-2 transition">
                         <i class="fa-solid fa-sparkles"></i>
-                        <span>AI 대화 스크립트 생성하기 (Gemini Pro)</span>
+                        <span>AI 대화 스크립트 생성하기</span>
                     </button>
                 </form>
             </div>
@@ -229,7 +229,7 @@
                 </button>
             </div>
             <p class="text-xs text-slate-400 leading-relaxed">
-                Google AI Studio에서 발급받은 API 키를 입력하세요. Key는 내 브라우저에만 저장됩니다.
+                Google AI Studio에서 발급받은 API 키를 입력하세요. Key는 내 브라우저에만 안전하게 저장됩니다.
             </p>
             <div>
                 <input type="password" id="apiKeyInput" placeholder="AIzaSy..." 
@@ -249,7 +249,7 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center hidden">
         <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-white font-bold text-lg mb-1">Gemini Pro가 대화를 작성 중입니다...</p>
+        <p class="text-white font-bold text-lg mb-1">Gemini가 대화를 작성 중입니다...</p>
         <p class="text-slate-400 text-xs">미국 현지 실생활 원어민 표현을 추출하는 중입니다.</p>
     </div>
 
@@ -318,7 +318,7 @@
             document.getElementById('situationInput').value = text;
         }
 
-        // Gemini Pro Model Multi-Endpoint Fallback Handling
+        // Multi-Model Auto-Fallback Logic (Robust against Google API updates)
         async function handleGenerate(e) {
             e.preventDefault();
             if (!apiKey) {
@@ -334,99 +334,115 @@
 
             document.getElementById('loadingOverlay').classList.remove('hidden');
 
-            const systemPrompt = `You are an expert native American English teacher. 
-Create a highly natural and practical daily dialogue script based on the situation provided. Use authentic American expressions.
+            const promptText = `You are an expert native American English teacher. 
+Create a natural daily dialogue script based on the situation provided by the user.
+
+Rules:
+1. Use natural, daily-life American English expressions.
+2. Provide a full dialogue script with Korean translations.
+3. Extract 3-5 mandatory key expressions/idioms with explanations.
+4. Output MUST strictly be in valid JSON format without any markdown backticks.
+
 User Situation: "${situation}"
-Difficulty Level: ${level}`;
+Difficulty Level: ${level}
 
-            const requestBody = {
-                contents: [{ parts: [{ text: systemPrompt }] }],
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            chapter_title: { type: "STRING" },
-                            situation_summary: { type: "STRING" },
-                            level: { type: "STRING" },
-                            dialogue: {
-                                type: "ARRAY",
-                                items: {
-                                    type: "OBJECT",
-                                    properties: {
-                                        speaker: { type: "STRING" },
-                                        english: { type: "STRING" },
-                                        korean: { type: "STRING" }
-                                    },
-                                    required: ["speaker", "english", "korean"]
-                                }
-                            },
-                            key_expressions: {
-                                type: "ARRAY",
-                                items: {
-                                    type: "OBJECT",
-                                    properties: {
-                                        expression: { type: "STRING" },
-                                        meaning: { type: "STRING" },
-                                        tip: { type: "STRING" }
-                                    },
-                                    required: ["expression", "meaning", "tip"]
-                                }
-                            }
-                        },
-                        required: ["chapter_title", "situation_summary", "level", "dialogue", "key_expressions"]
-                    }
-                }
-            };
+JSON Format Schema:
+{
+  "chapter_title": "Short title in Korean (e.g. 카페 주문하기)",
+  "situation_summary": "Brief summary in Korean",
+  "level": "${level}",
+  "dialogue": [
+    {
+      "speaker": "Speaker Name",
+      "english": "English sentence",
+      "korean": "Korean translation"
+    }
+  ],
+  "key_expressions": [
+    {
+      "expression": "Key English expression",
+      "meaning": "Korean meaning",
+      "tip": "Usage tip in Korean"
+    }
+  ]
+}`;
 
-            // Priority: Gemini Pro models first, fallback to Flash models if needed
-            const endpoints = [
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`,
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-                `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+            // List of model candidates across v1beta and v1 APIs
+            const modelCandidates = [
+                { ver: 'v1beta', model: 'gemini-2.5-flash' },
+                { ver: 'v1beta', model: 'gemini-2.0-flash' },
+                { ver: 'v1beta', model: 'gemini-1.5-flash-latest' },
+                { ver: 'v1beta', model: 'gemini-2.5-pro' },
+                { ver: 'v1beta', model: 'gemini-1.5-pro-latest' },
+                { ver: 'v1', model: 'gemini-1.5-flash' },
+                { ver: 'v1', model: 'gemini-1.5-pro' },
+                { ver: 'v1beta', model: 'gemini-1.5-flash' }
             ];
 
-            let lastError = null;
             let successData = null;
+            let lastError = "";
 
-            for (const url of endpoints) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(requestBody)
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-                        successData = data;
-                        break;
-                    } else if (data.error) {
-                        lastError = data.error.message;
+            for (const item of modelCandidates) {
+                const url = `https://generativelanguage.googleapis.com/${item.ver}/models/${item.model}:generateContent?key=${apiKey}`;
+                
+                const payloads = [
+                    {
+                        contents: [{ parts: [{ text: promptText }] }],
+                        generationConfig: { responseMimeType: "application/json" }
+                    },
+                    {
+                        contents: [{ parts: [{ text: promptText }] }]
                     }
-                } catch (err) {
-                    lastError = err.message;
+                ];
+
+                let modelSuccess = false;
+                for (const payload of payloads) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                            successData = data;
+                            modelSuccess = true;
+                            break;
+                        } else if (data.error) {
+                            lastError = `[${item.model}] ${data.error.message}`;
+                        }
+                    } catch (err) {
+                        lastError = `[${item.model}] ${err.message}`;
+                    }
                 }
+
+                if (modelSuccess) break;
             }
 
             document.getElementById('loadingOverlay').classList.add('hidden');
 
             if (successData) {
-                const rawText = successData.candidates[0].content.parts[0].text.trim();
-                const parsedData = JSON.parse(rawText);
-                currentChapter = {
-                    id: Date.now(),
-                    date: new Date().toLocaleDateString('ko-KR'),
-                    situationInput: situation,
-                    ...parsedData
-                };
+                try {
+                    let rawText = successData.candidates[0].content.parts[0].text.trim();
+                    rawText = rawText.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+                    
+                    const parsedData = JSON.parse(rawText);
+                    currentChapter = {
+                        id: Date.now(),
+                        date: new Date().toLocaleDateString('ko-KR'),
+                        situationInput: situation,
+                        ...parsedData
+                    };
 
-                renderChapterUI();
-                switchTab('tab-script');
+                    renderChapterUI();
+                    switchTab('tab-script');
+                } catch (parseErr) {
+                    alert('AI 대화 생성 결과 파싱 중 오류가 발생했습니다. 다시 시도해 주세요.');
+                }
             } else {
-                alert('대화 생성 중 오류가 발생했습니다:\n\n' + (lastError || 'API 연결에 실패했습니다.'));
+                alert('대화 생성 중 오류가 발생했습니다:\n\n' + (lastError || 'API 키가 올바른지 확인하거나 잠시 후 다시 시도해 주세요.'));
             }
         }
 
