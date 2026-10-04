@@ -27,20 +27,10 @@
             background-color: #172033;
             border: 1px solid #233048;
         }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0b1329;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0b1329; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -89,7 +79,7 @@
         <section id="tab-input" class="space-y-6">
             <div class="card-bg p-6 rounded-2xl shadow-xl border border-slate-800">
                 <h2 class="text-xl font-bold mb-2 text-white flex items-center">
-                    <i class="fa-solid fa-[#3b82f6] fa-wand-magic-sparkles text-blue-400 mr-2"></i> 대화 상황 입력하기
+                    <i class="fa-solid fa-wand-magic-sparkles text-blue-400 mr-2"></i> 대화 상황 입력하기
                 </h2>
                 <p class="text-slate-400 text-sm mb-6">
                     원하는 실생활 상황을 한국어나 영어로 자유롭게 적어주세요. Gemini가 원어민 표현으로 대화를 생성해 드립니다.
@@ -127,7 +117,6 @@
                             placeholder="예: 미국 현지 스타벅스 매장에서 얼음 적게 넣고 시럽 반으로 줄여서 주문하기"></textarea>
                     </div>
 
-                    <!-- Recommended Situation Tags -->
                     <div>
                         <span class="text-xs text-slate-400 mb-2 block">추천 키워드 태그:</span>
                         <div class="flex flex-wrap gap-2">
@@ -149,7 +138,6 @@
 
         <!-- TAB 2: 대화 학습 & 음성 -->
         <section id="tab-script" class="hidden space-y-4">
-            <!-- Top Controls Header Card -->
             <div class="card-header-bg p-5 rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <div class="flex items-center space-x-2 mb-1">
@@ -160,28 +148,23 @@
                     <p id="scriptSummary" class="text-xs text-slate-400">상황: 미국 현지 매장에서 얼음 적게 넣고 시럽 반으로 줄여 주문하기</p>
                 </div>
 
-                <!-- Action Controls Bar -->
                 <div class="flex flex-wrap items-center gap-2">
-                    <!-- Toggle Translation -->
                     <button onclick="toggleKorean()" id="toggleKoreanBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 flex items-center space-x-1 transition">
                         <i class="fa-solid fa-eye-slash"></i>
                         <span id="toggleKoreanText">한글 해석 숨기기</span>
                     </button>
 
-                    <!-- Continuous Play/Stop Button -->
                     <button onclick="toggleContinuousPlay()" id="playAllBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow flex items-center space-x-1.5 transition">
                         <i id="playAllIcon" class="fa-solid fa-play"></i>
                         <span id="playAllText">전체 대화 연속 재생</span>
                     </button>
 
-                    <!-- Speed Dropdown -->
                     <select id="playbackSpeed" class="bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg px-2.5 py-2 outline-none">
                         <option value="0.8">0.8x (느리게)</option>
                         <option value="1.0" selected>1.0x (보통)</option>
                         <option value="1.2">1.2x (빠르게)</option>
                     </select>
 
-                    <!-- Repeat Count Dropdown (새로 추가된 기능) -->
                     <select id="repeatCountSelect" class="bg-slate-800 border border-slate-700 text-slate-300 text-xs rounded-lg px-2.5 py-2 outline-none">
                         <option value="1">1회 재생</option>
                         <option value="3">3회 반복</option>
@@ -189,7 +172,6 @@
                         <option value="-1">🔁 무한 반복</option>
                     </select>
 
-                    <!-- Save to LocalStorage -->
                     <button onclick="saveCurrentChapter()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-3 py-2 rounded-lg shadow flex items-center space-x-1 transition">
                         <i class="fa-solid fa-bookmark"></i>
                         <span>챕터 보관함 저장</span>
@@ -197,16 +179,12 @@
                 </div>
             </div>
 
-            <!-- Repeat Progress Bar Indicator -->
             <div id="repeatIndicator" class="hidden bg-slate-800/80 border border-slate-700 px-4 py-2 rounded-xl flex justify-between items-center text-xs text-blue-400">
                 <span><i class="fa-solid fa-arrows-rotate animate-spin mr-2"></i>연속 재생 중...</span>
                 <span id="repeatStatusText" class="font-bold">반복 회차: 1 / 1</span>
             </div>
 
-            <!-- Dialogue Dialogue List Box -->
-            <div id="dialogueContainer" class="space-y-3">
-                <!-- Dialogue Bubbles generated dynamically -->
-            </div>
+            <div id="dialogueContainer" class="space-y-3"></div>
         </section>
 
         <!-- TAB 3: 필수 표현 암기 -->
@@ -218,9 +196,7 @@
                 <span class="text-xs text-slate-400">카드를 터치하면 상세 설명을 볼 수 있습니다.</span>
             </div>
 
-            <div id="keyExpressionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Flashcards generated dynamically -->
-            </div>
+            <div id="keyExpressionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </section>
 
         <!-- TAB 4: 보관함 -->
@@ -236,9 +212,7 @@
                 </div>
             </div>
 
-            <div id="storageListContainer" class="space-y-3">
-                <!-- Stored Chapters rendered here -->
-            </div>
+            <div id="storageListContainer" class="space-y-3"></div>
         </section>
 
     </main>
@@ -255,7 +229,7 @@
                 </button>
             </div>
             <p class="text-xs text-slate-400 leading-relaxed">
-                Google AI Studio에서 무료로 발급받은 API 키를 입력하세요. 키는 스마트폰 내부에만 안전하게 저장됩니다.
+                Google AI Studio에서 발급받은 API 키를 입력하세요. Key는 내 브라우저에만 저장됩니다.
             </p>
             <div>
                 <input type="password" id="apiKeyInput" placeholder="AIzaSy..." 
@@ -279,26 +253,21 @@
         <p class="text-slate-400 text-xs">미국 현지 실생활 원어민 표현을 추출하는 중입니다.</p>
     </div>
 
-    <!-- Application JavaScript Logic -->
     <script>
-        // Global State Variables
         let apiKey = localStorage.getItem('GEMINI_API_KEY') || '';
         let currentChapter = null;
         let savedChapters = JSON.parse(localStorage.getItem('SAVED_ENGLISH_CHAPTERS') || '[]');
         let isKoreanHidden = false;
         
-        // Continuous playback state
         let isPlaying = false;
         let currentSentenceIndex = 0;
         let currentRepeatIndex = 1;
         let targetRepeatCount = 1;
 
-        // On Page Load
         document.addEventListener('DOMContentLoaded', () => {
             updateApiKeyStatus();
             renderStorageList();
             
-            // If no chapter loaded, load dummy or first stored chapter
             if (savedChapters.length > 0) {
                 loadChapter(savedChapters[0].id);
             } else {
@@ -306,7 +275,6 @@
             }
         });
 
-        // Toggle Modals
         function toggleModal(modalId, show) {
             const modal = document.getElementById(modalId);
             if (show) modal.classList.remove('hidden');
@@ -335,7 +303,6 @@
             }
         }
 
-        // Switch Tabs
         function switchTab(tabId) {
             ['tab-input', 'tab-script', 'tab-cards', 'tab-storage'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
@@ -351,7 +318,7 @@
             document.getElementById('situationInput').value = text;
         }
 
-        // Gemini API Generation Request
+        // Gemini API Generation Call (Fixed JSON Schema & Detail Error Catching)
         async function handleGenerate(e) {
             e.preventDefault();
             if (!apiKey) {
@@ -369,48 +336,66 @@
 
             const systemPrompt = `You are an expert native American English teacher. 
 Create a natural daily dialogue script based on the situation provided.
-Output MUST strictly be a valid JSON object without any Markdown wrapping or code fences.
+User Situation: "${situation}"
+Difficulty Level: ${level}`;
 
-JSON Schema:
-{
-  "chapter_title": "Short title in Korean (e.g. 카페 주문하기)",
-  "situation_summary": "Brief summary in Korean",
-  "level": "${level}",
-  "dialogue": [
-    {
-      "speaker": "Speaker Name (e.g. Barista / Customer / Person A)",
-      "english": "English dialogue line",
-      "korean": "Korean translation"
-    }
-  ],
-  "key_expressions": [
-    {
-      "expression": "Mandatory English expression",
-      "meaning": "Korean meaning",
-      "tip": "Usage tip or explanation in Korean"
-    }
-  ]
-}
-
-User Situation: "${situation}"`;
+            const requestBody = {
+                contents: [{ parts: [{ text: systemPrompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            chapter_title: { type: "STRING" },
+                            situation_summary: { type: "STRING" },
+                            level: { type: "STRING" },
+                            dialogue: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        speaker: { type: "STRING" },
+                                        english: { type: "STRING" },
+                                        korean: { type: "STRING" }
+                                    },
+                                    required: ["speaker", "english", "korean"]
+                                }
+                            },
+                            key_expressions: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        expression: { type: "STRING" },
+                                        meaning: { type: "STRING" },
+                                        tip: { type: "STRING" }
+                                    },
+                                    required: ["expression", "meaning", "tip"]
+                                }
+                            }
+                        },
+                        required: ["chapter_title", "situation_summary", "level", "dialogue", "key_expressions"]
+                    }
+                }
+            };
 
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: systemPrompt }] }]
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
                 document.getElementById('loadingOverlay').classList.add('hidden');
 
-                if (data.candidates && data.candidates[0].content.parts[0].text) {
-                    let rawText = data.candidates[0].content.parts[0].text.trim();
-                    // Clean json Markdown backticks if present
-                    rawText = rawText.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+                if (!response.ok || data.error) {
+                    const errMsg = data.error ? data.error.message : 'HTTP 오류가 발생했습니다.';
+                    throw new Error(`[API 오류] ${errMsg}`);
+                }
 
+                if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                    const rawText = data.candidates[0].content.parts[0].text.trim();
                     const parsedData = JSON.parse(rawText);
                     currentChapter = {
                         id: Date.now(),
@@ -422,15 +407,14 @@ User Situation: "${situation}"`;
                     renderChapterUI();
                     switchTab('tab-script');
                 } else {
-                    throw new Error('API 응답 형식이 올바르지 않습니다.');
+                    throw new Error('Gemini 응답 내용이 비어있습니다.');
                 }
             } catch (err) {
                 document.getElementById('loadingOverlay').classList.add('hidden');
-                alert('대화 생성 중 오류가 발생했습니다: ' + err.message);
+                alert('대화 생성 중 오류가 발생했습니다:\n\n' + err.message);
             }
         }
 
-        // Render Current Chapter in UI
         function renderChapterUI() {
             if (!currentChapter) return;
 
@@ -439,7 +423,6 @@ User Situation: "${situation}"`;
             document.getElementById('scriptBadgeLevel').innerText = currentChapter.level || 'Intermediate';
             document.getElementById('scriptDate').innerText = currentChapter.date || new Date().toLocaleDateString('ko-KR');
 
-            // Render Dialogue List
             const dialogueContainer = document.getElementById('dialogueContainer');
             dialogueContainer.innerHTML = '';
 
@@ -468,7 +451,6 @@ User Situation: "${situation}"`;
                 dialogueContainer.appendChild(bubble);
             });
 
-            // Render Key Expressions Flashcards
             const cardsContainer = document.getElementById('keyExpressionsContainer');
             cardsContainer.innerHTML = '';
 
@@ -489,24 +471,19 @@ User Situation: "${situation}"`;
             });
         }
 
-        // Helper to escape single quotes
         function escapeQuote(str) {
             return str.replace(/'/g, "\\'");
         }
 
-        // Toggle Korean Translations visibility
         function toggleKorean() {
             isKoreanHidden = !isKoreanHidden;
-            const elements = document.querySelectorAll('.korean-text');
-            elements.forEach(el => {
+            document.querySelectorAll('.korean-text').forEach(el => {
                 if (isKoreanHidden) el.classList.add('hidden');
                 else el.classList.remove('hidden');
             });
-
             document.getElementById('toggleKoreanText').innerText = isKoreanHidden ? '한글 해석 보이기' : '한글 해석 숨기기';
         }
 
-        // Single Sentence Text-to-Speech
         function playSingleTTS(text, highlightIndex = -1) {
             window.speechSynthesis.cancel();
             const rate = parseFloat(document.getElementById('playbackSpeed').value);
@@ -514,26 +491,18 @@ User Situation: "${situation}"`;
             utterance.lang = 'en-US';
             utterance.rate = rate;
 
-            if (highlightIndex >= 0) {
-                highlightSentence(highlightIndex);
-            }
+            if (highlightIndex >= 0) highlightSentence(highlightIndex);
 
             utterance.onend = () => {
-                if (highlightIndex >= 0 && !isPlaying) {
-                    unhighlightSentence(highlightIndex);
-                }
+                if (highlightIndex >= 0 && !isPlaying) unhighlightSentence(highlightIndex);
             };
 
             window.speechSynthesis.speak(utterance);
         }
 
-        // Continuous Playback Logic with Repetition Support
         function toggleContinuousPlay() {
-            if (isPlaying) {
-                stopContinuousPlay();
-            } else {
-                startContinuousPlay();
-            }
+            if (isPlaying) stopContinuousPlay();
+            else startContinuousPlay();
         }
 
         function startContinuousPlay() {
@@ -544,7 +513,6 @@ User Situation: "${situation}"`;
             currentRepeatIndex = 1;
             targetRepeatCount = parseInt(document.getElementById('repeatCountSelect').value);
 
-            // Update Play button UI
             document.getElementById('playAllBtn').classList.replace('bg-blue-600', 'bg-red-600');
             document.getElementById('playAllBtn').classList.replace('hover:bg-blue-500', 'hover:bg-red-500');
             document.getElementById('playAllIcon').className = 'fa-solid fa-square';
@@ -560,7 +528,6 @@ User Situation: "${situation}"`;
             isPlaying = false;
             window.speechSynthesis.cancel();
 
-            // Revert Play button UI
             document.getElementById('playAllBtn').classList.replace('bg-red-600', 'bg-blue-600');
             document.getElementById('playAllBtn').classList.replace('hover:bg-red-500', 'hover:bg-blue-500');
             document.getElementById('playAllIcon').className = 'fa-solid fa-play';
@@ -568,9 +535,8 @@ User Situation: "${situation}"`;
 
             document.getElementById('repeatIndicator').classList.add('hidden');
 
-            // Clear sentence highlights
             document.querySelectorAll('[id^="sentence-box-"]').forEach(box => {
-                box.classList.remove('bg-blue-900/30', 'border-blue-500');
+                box.classList.remove('bg-blue-950/60', 'ring-1', 'ring-blue-500');
             });
         }
 
@@ -588,14 +554,11 @@ User Situation: "${situation}"`;
 
             const dialogueList = currentChapter.dialogue;
 
-            // Check if full script finished once
             if (currentSentenceIndex >= dialogueList.length) {
-                // If repeat target reached
                 if (targetRepeatCount !== -1 && currentRepeatIndex >= targetRepeatCount) {
                     stopContinuousPlay();
                     return;
                 }
-                // Loop to next repeat turn
                 currentRepeatIndex++;
                 currentSentenceIndex = 0;
                 updateRepeatStatusUI();
@@ -613,12 +576,10 @@ User Situation: "${situation}"`;
                 if (!isPlaying) return;
                 unhighlightSentence(currentSentenceIndex);
                 currentSentenceIndex++;
-                setTimeout(playNextSentenceInSequence, 600); // 0.6s pause between lines
+                setTimeout(playNextSentenceInSequence, 600);
             };
 
-            utterance.onerror = () => {
-                stopContinuousPlay();
-            };
+            utterance.onerror = () => stopContinuousPlay();
 
             window.speechSynthesis.speak(utterance);
         }
@@ -636,12 +597,9 @@ User Situation: "${situation}"`;
 
         function unhighlightSentence(index) {
             const box = document.getElementById(`sentence-box-${index}`);
-            if (box) {
-                box.classList.remove('bg-blue-950/60', 'ring-1', 'ring-blue-500');
-            }
+            if (box) box.classList.remove('bg-blue-950/60', 'ring-1', 'ring-blue-500');
         }
 
-        // Speech Recognition (STT) Pronunciation practice
         function startSTT(targetText, index) {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 브라우저를 사용해 주세요.');
@@ -668,7 +626,6 @@ User Situation: "${situation}"`;
             };
         }
 
-        // Local Storage Management
         function saveCurrentChapter() {
             if (!currentChapter) return;
 
@@ -736,7 +693,6 @@ User Situation: "${situation}"`;
             }
         }
 
-        // Default Sample Data
         function loadDefaultSampleChapter() {
             currentChapter = {
                 id: 1001,
