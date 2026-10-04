@@ -250,7 +250,7 @@
     <div id="loadingOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex flex-col items-center justify-center hidden">
         <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p class="text-white font-bold text-lg mb-1">Gemini가 대화를 작성 중입니다...</p>
-        <p class="text-slate-400 text-xs">미국 현지 실생활 원어민 표현을 추출하는 중입니다.</p>
+        <p class="text-slate-400 text-xs">사용 가능한 제미나이 모델을 감지하고 스크립트를 생성합니다.</p>
     </div>
 
     <script>
@@ -318,7 +318,32 @@
             document.getElementById('situationInput').value = text;
         }
 
-        // Multi-Model Auto-Fallback Logic (Robust against Google API updates)
+        // Dynamically Discovery Active Gemini Model (Solves 404 Model Not Found Error)
+        async function fetchActiveModel(key) {
+            const versions = ['v1beta', 'v1'];
+            for (const ver of versions) {
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/${ver}/models?key=${key}`);
+                    const data = await res.json();
+                    
+                    if (res.ok && data.models && data.models.length > 0) {
+                        const validModels = data.models.filter(m => 
+                            m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent')
+                        );
+                        if (validModels.length > 0) {
+                            // Find best model: prioritize flash/pro models
+                            const chosen = validModels.find(m => m.name.includes('flash') || m.name.includes('pro')) || validModels[0];
+                            return { ver: ver, fullModelName: chosen.name }; // returns e.g. "models/gemini-2.0-flash"
+                        }
+                    }
+                } catch (e) {
+                    console.error("Model fetch failed for version " + ver, e);
+                }
+            }
+            return null;
+        }
+
+        // Gemini Generation Handler
         async function handleGenerate(e) {
             e.preventDefault();
             if (!apiKey) {
@@ -334,19 +359,27 @@
 
             document.getElementById('loadingOverlay').classList.remove('hidden');
 
-            const promptText = `You are an expert native American English teacher. 
+            try {
+                // 1. Dynamic Model Discovery
+                const activeModel = await fetchActiveModel(apiKey);
+                if (!activeModel) {
+                    throw new Error('API 키가 올바르지 않거나 사용 가능한 Gemini 모델을 찾을 수 없습니다. Google AI Studio에서 API 키를 다시 발급받아 주세요.');
+                }
+
+                // 2. Prepare Prompt
+                const promptText = `You are an expert native American English teacher.
 Create a natural daily dialogue script based on the situation provided by the user.
 
 Rules:
 1. Use natural, daily-life American English expressions.
 2. Provide a full dialogue script with Korean translations.
 3. Extract 3-5 mandatory key expressions/idioms with explanations.
-4. Output MUST strictly be in valid JSON format without any markdown backticks.
+4. Output MUST strictly be in valid JSON format matching the schema below.
 
 User Situation: "${situation}"
 Difficulty Level: ${level}
 
-JSON Format Schema:
+JSON Output Format:
 {
   "chapter_title": "Short title in Korean (e.g. 카페 주문하기)",
   "situation_summary": "Brief summary in Korean",
@@ -367,65 +400,28 @@ JSON Format Schema:
   ]
 }`;
 
-            // List of model candidates across v1beta and v1 APIs
-            const modelCandidates = [
-                { ver: 'v1beta', model: 'gemini-2.5-flash' },
-                { ver: 'v1beta', model: 'gemini-2.0-flash' },
-                { ver: 'v1beta', model: 'gemini-1.5-flash-latest' },
-                { ver: 'v1beta', model: 'gemini-2.5-pro' },
-                { ver: 'v1beta', model: 'gemini-1.5-pro-latest' },
-                { ver: 'v1', model: 'gemini-1.5-flash' },
-                { ver: 'v1', model: 'gemini-1.5-pro' },
-                { ver: 'v1beta', model: 'gemini-1.5-flash' }
-            ];
+                const endpointUrl = `https://generativelanguage.googleapis.com/${activeModel.ver}/${activeModel.fullModelName}:generateContent?key=${apiKey}`;
 
-            let successData = null;
-            let lastError = "";
-
-            for (const item of modelCandidates) {
-                const url = `https://generativelanguage.googleapis.com/${item.ver}/models/${item.model}:generateContent?key=${apiKey}`;
-                
-                const payloads = [
-                    {
+                // 3. Request Generation
+                const response = await fetch(endpointUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         contents: [{ parts: [{ text: promptText }] }],
                         generationConfig: { responseMimeType: "application/json" }
-                    },
-                    {
-                        contents: [{ parts: [{ text: promptText }] }]
-                    }
-                ];
+                    })
+                });
 
-                let modelSuccess = false;
-                for (const payload of payloads) {
-                    try {
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
+                const data = await response.json();
+                document.getElementById('loadingOverlay').classList.add('hidden');
 
-                        const data = await response.json();
-
-                        if (response.ok && data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-                            successData = data;
-                            modelSuccess = true;
-                            break;
-                        } else if (data.error) {
-                            lastError = `[${item.model}] ${data.error.message}`;
-                        }
-                    } catch (err) {
-                        lastError = `[${item.model}] ${err.message}`;
-                    }
+                if (!response.ok || data.error) {
+                    const errMsg = data.error ? data.error.message : 'HTTP 오류가 발생했습니다.';
+                    throw new Error(errMsg);
                 }
 
-                if (modelSuccess) break;
-            }
-
-            document.getElementById('loadingOverlay').classList.add('hidden');
-
-            if (successData) {
-                try {
-                    let rawText = successData.candidates[0].content.parts[0].text.trim();
+                if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                    let rawText = data.candidates[0].content.parts[0].text.trim();
                     rawText = rawText.replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
                     
                     const parsedData = JSON.parse(rawText);
@@ -438,11 +434,13 @@ JSON Format Schema:
 
                     renderChapterUI();
                     switchTab('tab-script');
-                } catch (parseErr) {
-                    alert('AI 대화 생성 결과 파싱 중 오류가 발생했습니다. 다시 시도해 주세요.');
+                } else {
+                    throw new Error('Gemini 응답 내용이 비어있습니다.');
                 }
-            } else {
-                alert('대화 생성 중 오류가 발생했습니다:\n\n' + (lastError || 'API 키가 올바른지 확인하거나 잠시 후 다시 시도해 주세요.'));
+
+            } catch (err) {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                alert('대화 생성 중 오류가 발생했습니다:\n\n' + err.message);
             }
         }
 
