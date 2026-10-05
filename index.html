@@ -67,7 +67,7 @@
             </button>
             <button onclick="switchTab('tab-storage')" id="nav-tab-storage" class="nav-tab flex items-center space-x-2 px-4 py-3 text-sm font-medium whitespace-nowrap text-slate-400 hover:text-white transition">
                 <i class="fa-solid fa-folder-open"></i>
-                <span>4. 보관함</span>
+                <span>4. 보관함 및 동기화</span>
             </button>
         </div>
     </header>
@@ -199,8 +199,8 @@
             <div id="keyExpressionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </section>
 
-        <!-- TAB 4: 보관함 -->
-        <section id="tab-storage" class="hidden space-y-4">
+        <!-- TAB 4: 보관함 및 동기화 -->
+        <section id="tab-storage" class="hidden space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <h2 class="text-xl font-bold text-white flex items-center">
                     <i class="fa-solid fa-box-archive text-emerald-400 mr-2"></i> 저장된 학습 보관함
@@ -209,6 +209,53 @@
                     <input type="text" id="storageSearch" oninput="renderStorageList()" placeholder="제목 또는 상황 검색..."
                         class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500">
                     <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- 기기 간 동기화 설정 카드 -->
+            <div class="card-bg p-5 rounded-2xl border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-sm text-blue-400 flex items-center">
+                        <i class="fa-solid fa-arrows-rotate text-blue-400 mr-2"></i> PC ↔ 핸드폰 데이터 동기화
+                    </h3>
+                    <span class="text-xs text-slate-400">PC와 모바일에 동일한 키를 입력하세요</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 클라우드 동기화 -->
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
+                        <label class="block text-xs font-semibold text-slate-300">나만의 비밀 동기화 키 (Sync Key)</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="syncKeyInput" placeholder="예: my-english-2026" 
+                                class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <button id="syncBtn" onclick="handleCloudSync()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs px-4 py-2 rounded-lg transition flex items-center space-x-1.5 whitespace-nowrap">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>클라우드 동기화</span>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">
+                            💡 PC와 핸드폰에 <strong>동일한 키</strong>를 입력 후 버튼을 누르면 양쪽 수업 데이터가 자동으로 하나로 합쳐집니다.
+                        </p>
+                    </div>
+
+                    <!-- 파일 직접 백업/복원 -->
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
+                        <label class="block text-xs font-semibold text-slate-300">파일 직접 백업 및 복원</label>
+                        <div class="flex gap-2">
+                            <button onclick="exportStorageData()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs py-2 rounded-lg transition flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-download text-emerald-400"></i>
+                                <span>내보내기 (.json)</span>
+                            </button>
+                            <button onclick="triggerImportFile()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold text-xs py-2 rounded-lg transition flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-upload text-blue-400"></i>
+                                <span>가져오기 (.json)</span>
+                            </button>
+                            <input type="file" id="importFileInput" accept=".json" onchange="handleImportFile(event)" class="hidden">
+                        </div>
+                        <p class="text-[11px] text-slate-400 leading-relaxed">
+                            📂 인터넷 연결 없이 백업 파일을 다운로드하여 카카오톡이나 이메일로 전송 후 가져올 수 있습니다.
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -255,6 +302,7 @@
 
     <script>
         let apiKey = localStorage.getItem('GEMINI_API_KEY') || '';
+        let syncKey = localStorage.getItem('ENGLISH_SYNC_KEY') || '';
         let currentChapter = null;
         let savedChapters = JSON.parse(localStorage.getItem('SAVED_ENGLISH_CHAPTERS') || '[]');
         let isKoreanHidden = false;
@@ -266,6 +314,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             updateApiKeyStatus();
+            updateSyncKeyUI();
             renderStorageList();
             
             if (savedChapters.length > 0) {
@@ -303,6 +352,11 @@
             }
         }
 
+        function updateSyncKeyUI() {
+            const input = document.getElementById('syncKeyInput');
+            if (input && syncKey) input.value = syncKey;
+        }
+
         function switchTab(tabId) {
             ['tab-input', 'tab-script', 'tab-cards', 'tab-storage'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
@@ -318,7 +372,7 @@
             document.getElementById('situationInput').value = text;
         }
 
-        // Robust Generation Handler with Multi-Model Fallback Trial
+        // Gemini AI Script Generator
         async function handleGenerate(e) {
             e.preventDefault();
             if (!apiKey) {
@@ -367,7 +421,6 @@ JSON Output Format:
   ]
 }`;
 
-            // Priority model list to try sequentially
             let candidateList = [
                 { ver: 'v1beta', name: 'gemini-3.8-flash' },
                 { ver: 'v1beta', name: 'gemini-2.0-flash' },
@@ -377,7 +430,6 @@ JSON Output Format:
                 { ver: 'v1', name: 'gemini-1.5-pro' }
             ];
 
-            // Append any dynamically discovered models
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
                 if (res.ok) {
@@ -400,7 +452,6 @@ JSON Output Format:
             let successData = null;
             let lastErrorMessage = "";
 
-            // Try candidate models one by one until generateContent returns 200 OK
             for (const target of candidateList) {
                 const url = `https://generativelanguage.googleapis.com/${target.ver}/models/${target.name}:generateContent?key=${apiKey}`;
 
@@ -438,9 +489,7 @@ JSON Output Format:
                     }
                 }
 
-                if (reqSuccess) {
-                    break; // Successfully generated!
-                }
+                if (reqSuccess) break;
             }
 
             document.getElementById('loadingOverlay').classList.add('hidden');
@@ -744,6 +793,114 @@ JSON Output Format:
                 localStorage.setItem('SAVED_ENGLISH_CHAPTERS', JSON.stringify(savedChapters));
                 renderStorageList();
             }
+        }
+
+        // --- 클라우드 동기화 로직 ---
+        async function handleCloudSync() {
+            const key = document.getElementById('syncKeyInput').value.trim();
+            if (!key) {
+                alert('동기화에 사용할 자신만의 비밀 키(예: my-english-2026)를 입력해 주세요.');
+                return;
+            }
+
+            syncKey = key;
+            localStorage.setItem('ENGLISH_SYNC_KEY', syncKey);
+
+            const btn = document.getElementById('syncBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>동기화 중...</span>`;
+            btn.disabled = true;
+
+            try {
+                // 1. 원격 서버 데이터 가져오기
+                const getRes = await fetch(`[https://keyvalue.immanuel.co/api/KeyVal/GetValue/$](https://keyvalue.immanuel.co/api/KeyVal/GetValue/$){encodeURIComponent(syncKey)}`);
+                let remoteData = [];
+                if (getRes.ok) {
+                    const rawText = await getRes.text();
+                    if (rawText && rawText !== 'null') {
+                        try {
+                            remoteData = JSON.parse(rawText);
+                        } catch(e) { console.log('Remote parse error', e); }
+                    }
+                }
+
+                // 2. 로컬 데이터와 원격 데이터 병합 (중복 ID 자동 제거)
+                const localData = JSON.parse(localStorage.getItem('SAVED_ENGLISH_CHAPTERS') || '[]');
+                const mergedMap = new Map();
+
+                if (Array.isArray(remoteData)) {
+                    remoteData.forEach(ch => { if (ch && ch.id) mergedMap.set(ch.id, ch); });
+                }
+                if (Array.isArray(localData)) {
+                    localData.forEach(ch => { if (ch && ch.id) mergedMap.set(ch.id, ch); });
+                }
+
+                const mergedList = Array.from(mergedMap.values()).sort((a, b) => b.id - a.id);
+                savedChapters = mergedList;
+                localStorage.setItem('SAVED_ENGLISH_CHAPTERS', JSON.stringify(savedChapters));
+
+                // 3. 병합된 최신 데이터를 원격 서버에 업데이트
+                await fetch(`[https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/$](https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/$){encodeURIComponent(syncKey)}/${encodeURIComponent(JSON.stringify(savedChapters))}`, {
+                    method: 'POST'
+                });
+
+                renderStorageList();
+                alert(`🎉 동기화 완료!\n총 ${savedChapters.length}개의 학습 카드가 최신 상태로 합성 및 동기화 되었습니다.`);
+            } catch (err) {
+                console.error('Sync Error:', err);
+                alert('클라우드 동기화 중 통신 오류가 발생했습니다. 인터넷 연결을 확인하시거나 [파일 내보내기/가져오기] 기능을 이용해 주세요.');
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        // --- 백업 파일 내보내기/가져오기 로직 ---
+        function exportStorageData() {
+            if (savedChapters.length === 0) {
+                alert('내보낼 보관함 데이터가 없습니다.');
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(savedChapters, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `Daily_English_Backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function triggerImportFile() {
+            document.getElementById('importFileInput').click();
+        }
+
+        function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedData)) {
+                        alert('올바른 보관함 백업 파일(.json) 형식이 아닙니다.');
+                        return;
+                    }
+
+                    const mergedMap = new Map();
+                    savedChapters.forEach(ch => { if(ch && ch.id) mergedMap.set(ch.id, ch); });
+                    importedData.forEach(ch => { if(ch && ch.id) mergedMap.set(ch.id, ch); });
+
+                    savedChapters = Array.from(mergedMap.values()).sort((a,b) => b.id - a.id);
+                    localStorage.setItem('SAVED_ENGLISH_CHAPTERS', JSON.stringify(savedChapters));
+                    renderStorageList();
+                    alert(`✅ 성공적으로 가져왔습니다!\n총 ${savedChapters.length}개의 학습 카드가 보관함에 들어있습니다.`);
+                } catch (err) {
+                    alert('파일을 읽는 중 오류가 발생했습니다: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
         }
 
         function loadDefaultSampleChapter() {
