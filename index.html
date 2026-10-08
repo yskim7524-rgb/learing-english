@@ -142,7 +142,7 @@
                 <div>
                     <div class="flex items-center space-x-2 mb-1">
                         <span id="scriptBadgeLevel" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Intermediate</span>
-                        <span id="scriptDate" class="text-xs text-slate-400">2026. 10. 5.</span>
+                        <span id="scriptDate" class="text-xs text-slate-400">2026. 10. 8.</span>
                     </div>
                     <h2 id="scriptTitle" class="text-2xl font-bold text-white mb-1">카페 주문하기</h2>
                     <p id="scriptSummary" class="text-xs text-slate-400">상황: 미국 현지 매장에서 얼음 적게 넣고 시럽 반으로 줄여 주문하기</p>
@@ -216,13 +216,13 @@
             <div class="card-bg p-5 rounded-2xl border border-slate-800 space-y-4">
                 <div class="flex items-center justify-between">
                     <h3 class="font-bold text-sm text-blue-400 flex items-center">
-                        <i class="fa-solid fa-arrows-rotate text-blue-400 mr-2"></i> PC ↔ 핸드폰 데이터 동기화
+                        <i class="fa-solid fa-arrows-rotate text-blue-400 mr-2"></i> PC ↔ 핸드폰 데이터 동기화 (개선됨)
                     </h3>
-                    <span class="text-xs text-slate-400">PC와 모바일에 동일한 키를 입력하세요</span>
+                    <span class="text-xs text-slate-400">동일한 키를 입력한 뒤 버튼을 눌러주세요</span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- 클라우드 동기화 -->
+                    <!-- 대용량 클라우드 동기화 -->
                     <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
                         <label class="block text-xs font-semibold text-slate-300">나만의 비밀 동기화 키 (Sync Key)</label>
                         <div class="flex gap-2">
@@ -234,7 +234,7 @@
                             </button>
                         </div>
                         <p class="text-[11px] text-slate-400 leading-relaxed">
-                            💡 PC와 핸드폰에 <strong>동일한 키</strong>를 입력 후 버튼을 누르면 양쪽 수업 데이터가 자동으로 하나로 합쳐집니다.
+                            💡 <strong>사용 방법</strong>: PC에서 [클라우드 동기화] 클릭 ➔ 핸드폰에서도 똑같은 키 입력 후 [클라우드 동기화] 클릭 시 양쪽 학습 내용이 하나로 합쳐집니다.
                         </p>
                     </div>
 
@@ -253,7 +253,7 @@
                             <input type="file" id="importFileInput" accept=".json" onchange="handleImportFile(event)" class="hidden">
                         </div>
                         <p class="text-[11px] text-slate-400 leading-relaxed">
-                            📂 인터넷 연결 없이 백업 파일을 다운로드하여 카카오톡이나 이메일로 전송 후 가져올 수 있습니다.
+                            📂 오프라인 환경인 경우, 백업 파일(.json)을 카카오톡이나 이메일로 주고받아 복원할 수 있습니다.
                         </p>
                     </div>
                 </div>
@@ -795,11 +795,18 @@ JSON Output Format:
             }
         }
 
-        // --- 클라우드 동기화 로직 ---
+        // --- 개선된 클라우드 동기화 로직 (URL 길이 제한 없는 HTTP Body POST 방식) ---
         async function handleCloudSync() {
             const key = document.getElementById('syncKeyInput').value.trim();
             if (!key) {
                 alert('동기화에 사용할 자신만의 비밀 키(예: my-english-2026)를 입력해 주세요.');
+                return;
+            }
+
+            // 특수문자 제거 후 식별자 생성
+            const safeKey = key.replace(/[^a-zA-Z0-9-_]/g, '');
+            if (!safeKey) {
+                alert('동기화 키는 영문, 숫자, 하이픈(-) 조합으로 입력해 주세요.');
                 return;
             }
 
@@ -812,19 +819,24 @@ JSON Output Format:
             btn.disabled = true;
 
             try {
-                // 1. 원격 서버 데이터 가져오기
-                const getRes = await fetch(`[https://keyvalue.immanuel.co/api/KeyVal/GetValue/$](https://keyvalue.immanuel.co/api/KeyVal/GetValue/$){encodeURIComponent(syncKey)}`);
+                // 대용량 HTTP Body 전송을 지원하는 CORS 연동 저장소 endpoint
+                const endpoint = `[https://kvdb.io/4R93eS7Z1k9X8Y2W/$](https://kvdb.io/4R93eS7Z1k9X8Y2W/$){encodeURIComponent(safeKey)}`;
+
+                // 1. 서버 저장 데이터 다운로드 (GET)
                 let remoteData = [];
-                if (getRes.ok) {
-                    const rawText = await getRes.text();
-                    if (rawText && rawText !== 'null') {
-                        try {
-                            remoteData = JSON.parse(rawText);
-                        } catch(e) { console.log('Remote parse error', e); }
+                try {
+                    const getRes = await fetch(endpoint);
+                    if (getRes.ok) {
+                        const fetchedJson = await getRes.json();
+                        if (Array.isArray(fetchedJson)) {
+                            remoteData = fetchedJson;
+                        }
                     }
+                } catch (e) {
+                    console.log('서버에 기존 데이터가 없거나 첫 동기화입니다.');
                 }
 
-                // 2. 로컬 데이터와 원격 데이터 병합 (중복 ID 자동 제거)
+                // 2. 로컬 데이터와 서버 데이터 병합 (중복 ID 자동 제거)
                 const localData = JSON.parse(localStorage.getItem('SAVED_ENGLISH_CHAPTERS') || '[]');
                 const mergedMap = new Map();
 
@@ -839,16 +851,22 @@ JSON Output Format:
                 savedChapters = mergedList;
                 localStorage.setItem('SAVED_ENGLISH_CHAPTERS', JSON.stringify(savedChapters));
 
-                // 3. 병합된 최신 데이터를 원격 서버에 업데이트
-                await fetch(`[https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/$](https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/$){encodeURIComponent(syncKey)}/${encodeURIComponent(JSON.stringify(savedChapters))}`, {
-                    method: 'POST'
+                // 3. 병합된 대용량 데이터를 HTTP Body에 담아 업로드 (POST)
+                const postRes = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(savedChapters)
                 });
 
+                if (!postRes.ok) {
+                    throw new Error(`서버 저장 실패 (상태 코드: ${postRes.status})`);
+                }
+
                 renderStorageList();
-                alert(`🎉 동기화 완료!\n총 ${savedChapters.length}개의 학습 카드가 최신 상태로 합성 및 동기화 되었습니다.`);
+                alert(`🎉 동기화 성공!\n총 ${savedChapters.length}개의 학습 카드가 최신 상태로 합성 및 동기화되었습니다.`);
             } catch (err) {
                 console.error('Sync Error:', err);
-                alert('클라우드 동기화 중 통신 오류가 발생했습니다. 인터넷 연결을 확인하시거나 [파일 내보내기/가져오기] 기능을 이용해 주세요.');
+                alert('클라우드 동기화 중 오류가 발생했습니다.\n키 이름을 확인하시거나 오른쪽의 [내보내기/가져오기] 백업 파일 방식을 이용해 주세요.');
             } finally {
                 btn.innerHTML = originalHTML;
                 btn.disabled = false;
@@ -894,7 +912,7 @@ JSON Output Format:
                     savedChapters = Array.from(mergedMap.values()).sort((a,b) => b.id - a.id);
                     localStorage.setItem('SAVED_ENGLISH_CHAPTERS', JSON.stringify(savedChapters));
                     renderStorageList();
-                    alert(`✅ 성공적으로 가져왔습니다!\n총 ${savedChapters.length}개의 학습 카드가 보관함에 들어있습니다.`);
+                    alert(`✅ 성공적으로 가져왔습니다!\n총 ${savedChapters.length}개의 학습 카드가 보관함에 복원되었습니다.`);
                 } catch (err) {
                     alert('파일을 읽는 중 오류가 발생했습니다: ' + err.message);
                 }
@@ -906,7 +924,7 @@ JSON Output Format:
         function loadDefaultSampleChapter() {
             currentChapter = {
                 id: 1001,
-                date: "2026. 10. 5.",
+                date: "2026. 10. 8.",
                 chapter_title: "카페 주문하기",
                 situation_summary: "미국 현지 매장에서 얼음 적게 넣고 시럽 반으로 줄여 주문하기",
                 level: "Intermediate",
